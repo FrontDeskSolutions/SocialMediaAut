@@ -156,6 +156,38 @@ const Editor = () => {
                         <TabsContent value="design" className="space-y-6 mt-0">
                              <div className="space-y-2">
                                 <label className="text-xs font-mono text-muted-foreground flex items-center gap-2">
+                                    <Layout size={12} /> SLIDE TYPE
+                                </label>
+                                <Select 
+                                    value={activeSlide.type || 'body'} 
+                                    onValueChange={v => handleUpdateSlide('type', v)}
+                                >
+                                    <SelectTrigger className="bg-secondary border-transparent">
+                                        <SelectValue placeholder="Select Type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="hero">Hero (Hook)</SelectItem>
+                                        <SelectItem value="body">Body (Content)</SelectItem>
+                                        <SelectItem value="cta">CTA (Action)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            
+                            {activeSlide.type === 'cta' && (
+                                <div className="space-y-2">
+                                    <label className="text-xs font-mono text-muted-foreground flex items-center gap-2">
+                                        <Palette size={12} /> CTA STYLE
+                                    </label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <Button variant={activeSlide.variant === '1' ? 'default' : 'outline'} onClick={() => handleUpdateSlide('variant', '1')} className="text-xs">Link</Button>
+                                        <Button variant={activeSlide.variant === '2' ? 'default' : 'outline'} onClick={() => handleUpdateSlide('variant', '2')} className="text-xs">Profile</Button>
+                                        <Button variant={activeSlide.variant === '3' ? 'default' : 'outline'} onClick={() => handleUpdateSlide('variant', '3')} className="text-xs">Button</Button>
+                                    </div>
+                                </div>
+                            )}
+
+                             <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2">
                                     <Layout size={12} /> LAYOUT STYLE
                                 </label>
                                 <div className="grid grid-cols-2 gap-2">
@@ -188,6 +220,28 @@ const Editor = () => {
                                         <SelectItem value="serif">Classic (Playfair)</SelectItem>
                                         <SelectItem value="mono">Tech (Mono)</SelectItem>
                                         <SelectItem value="bold">Impact (Heavy)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2">
+                                    <Sparkles size={12} /> TEXT EFFECT
+                                </label>
+                                <Select 
+                                    value={activeSlide.text_effect || 'none'} 
+                                    onValueChange={v => handleUpdateSlide('text_effect', v)}
+                                >
+                                    <SelectTrigger className="bg-secondary border-transparent">
+                                        <SelectValue placeholder="Select Effect" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">None</SelectItem>
+                                        <SelectItem value="glow">Glow</SelectItem>
+                                        <SelectItem value="gradient">Gradient</SelectItem>
+                                        <SelectItem value="chrome">Chrome</SelectItem>
+                                        <SelectItem value="glitch">Glitch</SelectItem>
+                                        <SelectItem value="neon">Neon</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
