@@ -23,44 +23,52 @@ def test_kie_flow():
         }
     }
     
+    task_id = None
+    
     try:
         resp = requests.post(url, json=payload, headers=headers)
         print(f"Create Status: {resp.status_code}")
-        print(f"Create Response: {resp.text}")
         
-        if resp.status_code != 200:
+        if resp.status_code == 200:
+            data = resp.json()
+            task_id = data.get('data', {}).get('taskId')
+            record_id = data.get('data', {}).get('recordId')
+            print(f"Task ID: {task_id}")
+            print(f"Record ID: {record_id}")
+        else:
+            print(resp.text)
             return
-            
-        data = resp.json()
-        task_id = data.get('data', {}).get('taskId')
-        if not task_id:
-            print("No taskId returned")
-            return
-            
-        print(f"Task ID: {task_id}")
-        
-        # 2. Try Query - Attempt 1: GET queryTask
-        print("\nAttempting GET queryTask...")
-        query_url = f"{BASE_URL}/api/v1/jobs/queryTask"
-        resp = requests.get(query_url, params={"taskId": task_id}, headers=headers)
-        print(f"GET Status: {resp.status_code}")
-        print(f"GET Response: {resp.text}")
-        
-        # 3. Try Query - Attempt 2: POST queryTask (Common for some APIs)
-        if resp.status_code != 200:
-            print("\nAttempting POST queryTask...")
-            resp = requests.post(query_url, json={"taskId": task_id}, headers=headers)
-            print(f"POST Status: {resp.status_code}")
-            print(f"POST Response: {resp.text}")
 
-            # 4. Try Query - Attempt 3: GET getTask
-            if resp.status_code != 200:
-                print("\nAttempting GET getTask...")
-                get_url = f"{BASE_URL}/api/v1/jobs/getTask"
-                resp = requests.get(get_url, params={"taskId": task_id}, headers=headers)
-                print(f"GET getTask Status: {resp.status_code}")
-                print(f"GET getTask Response: {resp.text}")
-    
+        if not task_id:
+            return
+            
+        # Try various query endpoints
+        endpoints = [
+            ("/api/v1/jobs/queryTask", "GET", {"taskId": task_id}),
+            ("/api/v1/jobs/queryTask", "POST", {"taskId": task_id}),
+            ("/api/v1/jobs/getTask", "GET", {"taskId": task_id}),
+            ("/api/v1/jobs/record-detail", "GET", {"taskId": task_id}),
+            ("/api/v1/jobs/detail", "GET", {"taskId": task_id}),
+            ("/api/v1/query/task", "GET", {"taskId": task_id}),
+            ("/api/v1/task/query", "POST", {"taskId": task_id}),
+        ]
+
+        for path, method, params in endpoints:
+            print(f"\nTrying {method} {path}...")
+            try:
+                full_url = f"{BASE_URL}{path}"
+                if method == "GET":
+                    r = requests.get(full_url, params=params, headers=headers)
+                else:
+                    r = requests.post(full_url, json=params, headers=headers)
+                
+                print(f"Status: {r.status_code}")
+                if r.status_code == 200:
+                    print(f"SUCCESS! Response: {r.text}")
+                    break
+            except Exception as e:
+                print(f"Failed: {e}")
+                
     except Exception as e:
         print(f"Error: {e}")
 
