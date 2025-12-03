@@ -152,7 +152,7 @@ const Editor = () => {
             </div>
 
             {/* Right: Properties */}
-            <div className="w-80 border-l border-border bg-background p-6 overflow-y-auto space-y-6">
+            <div className="w-80 border-l border-border bg-background p-6 overflow-y-auto space-y-6" data-testid="properties-panel">
                 <h3 className="font-heading font-bold text-lg text-primary">SLIDE PROPERTIES</h3>
                 
                 <div className="space-y-2">
@@ -162,6 +162,7 @@ const Editor = () => {
                         onChange={e => handleUpdateSlide('title', e.target.value)}
                         className="font-heading font-bold text-lg bg-secondary border-transparent focus:border-primary"
                         rows={3}
+                        data-testid="input-headline"
                     />
                 </div>
 
@@ -172,6 +173,7 @@ const Editor = () => {
                         onChange={e => handleUpdateSlide('content', e.target.value)}
                         className="font-body text-sm bg-secondary border-transparent focus:border-primary"
                         rows={6}
+                        data-testid="input-content"
                     />
                 </div>
 
@@ -184,11 +186,13 @@ const Editor = () => {
                         onChange={e => handleUpdateSlide('background_prompt', e.target.value)}
                         className="text-xs bg-secondary border-transparent focus:border-primary font-mono"
                         rows={4}
+                        data-testid="input-prompt"
                     />
                     <Button 
                         onClick={handleGenerateImage} 
                         disabled={generatingImage}
                         className="w-full mt-2 bg-secondary hover:bg-secondary/80 border border-border"
+                        data-testid="generate-art-button"
                     >
                         {generatingImage ? <Loader2 className="animate-spin mr-2" /> : <Wand2 className="mr-2" />}
                         GENERATE ART
