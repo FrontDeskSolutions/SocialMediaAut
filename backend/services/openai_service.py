@@ -16,24 +16,49 @@ class OpenAIService:
         self.model = settings.openai_model
         self.dalle_model = settings.dalle_model
 
+    async def generate_viral_structure(self, topic: str, count: int = 5) -> dict:
+        """Generates content specifically for the 'AI Viral' mode"""
+        system_prompt = f"""You are a viral social media expert. 
+        Generate content for a {count}-slide carousel about '{topic}'.
+        
+        Return a JSON object with:
+        1. 'hero': {{
+            'topheadline': 'Short punchy hook',
+            'bottomheadline': 'Intriguing subhook',
+            'color1': 'Hex color 1 (Dark/Vibrant)',
+            'color2': 'Hex color 2 (Complementary)'
+        }}
+        2. 'slides': Array of {count-1} objects (excluding hero) for the body slides. Each must have:
+            - 'title': Headline
+            - 'content': Body text (max 20 words)
+        """
+        
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "system", "content": system_prompt}],
+                response_format={"type": "json_object"}
+            )
+            return json.loads(response.choices[0].message.content)
+        except Exception as e:
+            logger.error(f"LLM Error: {e}")
+            raise
+
     async def generate_slides_content(self, topic: str, count: int = 5, context: str = "") -> list[dict]:
+        # (Existing method kept for compatibility)
         system_prompt = f"""You are a social media expert. Generate a {count}-slide carousel. 
         Return ONLY a JSON object with a 'slides' key containing an array of {count} objects.
-        
         Structure logic:
         - Slide 1 MUST be type='hero' (Hook the reader).
         - Middle slides MUST be type='body' (Value/Educational).
         - Last slide MUST be type='cta' (Call to Action).
-
         Each object must have:
         - 'type': 'hero', 'body', or 'cta'.
         - 'title': Short, punchy headline.
         - 'content': The main text (max 30 words).
         - 'background_prompt': A visual description for DALL-E 3 (Abstract, texture, minimalist, 4k, no text).
         """
-        
         user_prompt = f"Topic: {topic}\nSlide Count: {count}\nContext: {context}"
-
         try:
             response = await self.client.chat.completions.create(
                 model=self.model,

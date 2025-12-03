@@ -2,11 +2,14 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getGenerations, triggerGeneration } from '../services/api';
-import { Plus, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Plus, Loader2, Image as ImageIcon, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 const Dashboard = () => {
   const [generations, setGenerations] = useState([]);
@@ -14,6 +17,7 @@ const Dashboard = () => {
   const [newTopic, setNewTopic] = useState('');
   const [slideCount, setSlideCount] = useState(5);
   const [creating, setCreating] = useState(false);
+  const [viralMode, setViralMode] = useState(false);
 
   const load = async () => {
     try {
@@ -37,9 +41,9 @@ const Dashboard = () => {
     if (!newTopic) return;
     setCreating(true);
     try {
-      // Pass slide_count to API
-      await triggerGeneration(newTopic, slideCount);
-      toast.success("Generation started");
+      // Trigger with extra_context='viral' if switch is on
+      await triggerGeneration(newTopic, slideCount, viralMode ? 'viral' : '');
+      toast.success(viralMode ? "Viral AI Generation started (This takes ~1 min)" : "Standard Generation started");
       setNewTopic('');
       load();
     } catch (e) {
@@ -52,9 +56,12 @@ const Dashboard = () => {
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8" data-testid="dashboard-container">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <h1 className="text-4xl font-bold text-white font-heading" data-testid="dashboard-title">CONTROL ROOM</h1>
+        <div className="flex items-center gap-4">
+            <h1 className="text-4xl font-bold text-white font-heading" data-testid="dashboard-title">CONTROL ROOM</h1>
+            {viralMode && <span className="bg-primary text-black text-xs font-bold px-2 py-1 rounded uppercase animate-pulse">AI Viral Mode</span>}
+        </div>
         
-        <div className="bg-card border border-border p-4 rounded-sm w-full md:w-auto">
+        <div className="bg-card border border-border p-4 rounded-sm w-full md:w-auto flex flex-col gap-4">
             <form onSubmit={handleCreate} className="flex flex-col md:flex-row gap-4 items-end">
                 <div className="space-y-2">
                     <label className="text-xs font-mono text-muted-foreground">TOPIC</label>
@@ -82,11 +89,16 @@ const Dashboard = () => {
                     />
                 </div>
 
-                <Button type="submit" disabled={creating} className="bg-primary text-black hover:bg-primary/80 h-10" data-testid="new-project-button">
-                    {creating ? <Loader2 className="animate-spin" /> : <Plus />}
-                    NEW PROJECT
+                <Button type="submit" disabled={creating} className={cn("text-black h-10 w-40", viralMode ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600" : "bg-primary hover:bg-primary/80")} data-testid="new-project-button">
+                    {creating ? <Loader2 className="animate-spin" /> : (viralMode ? <Zap className="mr-2" /> : <Plus className="mr-2" />)}
+                    {viralMode ? "GENERATE VIRAL" : "NEW PROJECT"}
                 </Button>
             </form>
+            
+            <div className="flex items-center space-x-2 pt-2 border-t border-border">
+                <Switch id="viral-mode" checked={viralMode} onCheckedChange={setViralMode} />
+                <Label htmlFor="viral-mode" className="text-xs text-muted-foreground cursor-pointer">Enable <strong>AI Control Room</strong> (Nano Banana Pro)</Label>
+            </div>
         </div>
       </div>
 
@@ -96,15 +108,18 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {generations.map(gen => (
                 <Link key={gen.id} to={`/editor/${gen.id}`}>
-                    <Card className="p-6 bg-card border-border hover:border-primary transition-colors cursor-pointer group h-full flex flex-col">
+                    <Card className={cn("p-6 bg-card border transition-colors cursor-pointer group h-full flex flex-col", gen.mode === 'viral' ? "border-purple-500/50 hover:border-purple-500" : "border-border hover:border-primary")}>
                         <div className="flex justify-between items-start mb-4">
-                            <span className={cn("text-xs font-mono px-2 py-1 uppercase", 
-                                gen.status === 'completed' ? 'bg-green-900 text-green-400' : 
-                                gen.status === 'failed' ? 'bg-red-900 text-red-400' : 
-                                'bg-yellow-900 text-yellow-400'
-                            )}>
-                                {gen.status}
-                            </span>
+                            <div className="flex gap-2">
+                                <span className={cn("text-xs font-mono px-2 py-1 uppercase", 
+                                    gen.status === 'completed' ? 'bg-green-900 text-green-400' : 
+                                    gen.status === 'failed' ? 'bg-red-900 text-red-400' : 
+                                    'bg-yellow-900 text-yellow-400'
+                                )}>
+                                    {gen.status}
+                                </span>
+                                {gen.mode === 'viral' && <span className="text-xs font-mono px-2 py-1 uppercase bg-purple-900 text-purple-400"><Zap size={10} className="inline mr-1"/>VIRAL</span>}
+                            </div>
                             <span className="text-muted-foreground text-xs">{new Date(gen.created_at).toLocaleDateString()}</span>
                         </div>
                         <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary truncate">{gen.topic}</h3>
@@ -121,5 +136,4 @@ const Dashboard = () => {
   );
 };
 
-import { cn } from '@/lib/utils';
 export default Dashboard;

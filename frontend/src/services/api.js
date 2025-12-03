@@ -27,7 +27,11 @@ export const generateImage = async (genId, slideId) => {
   return res.data;
 };
 
-export const triggerGeneration = async (topic, slideCount = 5) => {
-  const res = await api.post('/webhooks/trigger', { topic, slide_count: slideCount });
+export const triggerGeneration = async (topic, slideCount = 5, context = "") => {
+  const res = await api.post('/webhooks/trigger', { 
+    topic, 
+    slide_count: slideCount,
+    extra_context: context 
+  });
   return res.data;
 };
