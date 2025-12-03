@@ -8,21 +8,28 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import * as htmlToImage from 'html-to-image';
 import { 
-  Loader2, Save, Download, Wand2, ArrowLeft, Layout, Type, Palette, Sparkles, Plus, Trash2, Pipette 
+  Loader2, Save, Download, Wand2, ArrowLeft, Layout, Type, Palette, Sparkles, Plus, Trash2, Pipette, Frame
 } from 'lucide-react';
-import '@/styles/effects.css'; // Import effects
+import '@/styles/effects.css';
 
-const themeColors = {
-  lime: '#ccff00',
-  emerald: '#34d399',
-  navy: '#bae6fd',
-  burgundy: '#f472b6',
-  slate: '#f8fafc',
-};
+const themeOptions = [
+  { id: "trust_clarity", name: "Trust & Clarity", color: "#0F172A" },
+  { id: "modern_luxury", name: "Modern Luxury", color: "#1C1C1C" },
+  { id: "swiss_minimalist", name: "Swiss Minimalist", color: "#000000" },
+  { id: "forest_executive", name: "Forest Executive", color: "#064E3B" },
+  { id: "warm_editorial", name: "Warm Editorial", color: "#4A3B32" },
+  { id: "dark_mode_premium", name: "Dark Mode Premium", color: "#18181B" },
+  { id: "slate_clay", name: "Slate & Clay", color: "#334155" },
+  { id: "royal_academic", name: "Royal Academic", color: "#2E1065" },
+  { id: "industrial_chic", name: "Industrial Chic", color: "#262626" },
+  { id: "sunset_corporate", name: "Sunset Corporate", color: "#7C2D12" },
+];
 
 const Editor = () => {
   const { id } = useParams();
@@ -58,13 +65,14 @@ const Editor = () => {
     
     let updatedSlides = [...generation.slides];
     
-    // UNIVERSAL THEME LOGIC
     if (field === 'theme') {
-        // Update theme for ALL slides
         updatedSlides = updatedSlides.map(slide => ({ ...slide, theme: value }));
         toast.info("Theme updated for all slides");
+    } else if (field === 'text_bg_enabled_global') {
+        // Special case for global text bg toggle if desired, or just per slide
+        updatedSlides = updatedSlides.map(slide => ({ ...slide, text_bg_enabled: value }));
+        toast.info("Text background updated for all slides");
     } else {
-        // Update single property for active slide
         updatedSlides[activeSlideIndex] = { ...activeSlide, [field]: value };
     }
 
@@ -126,7 +134,8 @@ const Editor = () => {
         background_prompt: "Abstract",
         type: "body",
         layout: "default",
-        theme: activeSlide?.theme || 'lime' // Inherit theme
+        theme: activeSlide?.theme || 'trust_clarity',
+        text_bg_enabled: true
     };
     const newSlides = [...generation.slides, newSlide];
     setGeneration({ ...generation, slides: newSlides });
@@ -160,9 +169,9 @@ const Editor = () => {
             <div className="w-48 border-r border-border bg-secondary/20 overflow-y-auto p-4 space-y-4 flex flex-col">
                 {generation.slides.map((slide, idx) => (
                     <div key={slide.id} onClick={() => setActiveSlideIndex(idx)} className={cn("aspect-square bg-black border-2 cursor-pointer relative group", activeSlideIndex === idx ? "border-primary" : "border-border")}>
-                        <div className="absolute top-1 left-1 bg-black/50 px-2 text-xs">{idx + 1}</div>
+                        <div className="absolute top-1 left-1 bg-black/50 px-2 text-xs text-white">{idx + 1}</div>
                         <button onClick={(e) => deleteSlide(e, idx)} className="absolute top-1 right-1 bg-red-500 p-1 opacity-0 group-hover:opacity-100"><Trash2 size={12} /></button>
-                        <div className="p-2 text-[8px] mt-6 truncate">{slide.title}</div>
+                        <div className="p-2 text-[8px] mt-6 truncate text-white">{slide.title}</div>
                     </div>
                 ))}
                 <Button onClick={addSlide} variant="outline"><Plus className="mr-2" /> Add Slide</Button>
@@ -204,18 +213,33 @@ const Editor = () => {
                         <TabsContent value="design" className="space-y-6 mt-0">
                              <div className="space-y-2">
                                 <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Palette size={12} /> GLOBAL THEME</label>
-                                <Select value={activeSlide.theme || 'lime'} onValueChange={v => handleUpdateSlide('theme', v)}>
+                                <Select value={activeSlide.theme || 'trust_clarity'} onValueChange={v => handleUpdateSlide('theme', v)}>
                                     <SelectTrigger className="bg-secondary border-transparent">
-                                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{backgroundColor: themeColors[activeSlide.theme || 'lime']}} /> <SelectValue /></div>
+                                        <SelectValue placeholder="Select Theme" />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="lime">Electric Lime</SelectItem>
-                                        <SelectItem value="emerald">Emerald Green</SelectItem>
-                                        <SelectItem value="navy">Deep Navy</SelectItem>
-                                        <SelectItem value="burgundy">Rich Burgundy</SelectItem>
-                                        <SelectItem value="slate">Clean Slate</SelectItem>
+                                    <SelectContent className="max-h-64">
+                                        {themeOptions.map(t => (
+                                            <SelectItem key={t.id} value={t.id}>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-3 h-3 rounded-full" style={{backgroundColor: t.color}} />
+                                                    {t.name}
+                                                </div>
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Frame size={12} /> TEXT CONTAINER</label>
+                                <div className="flex items-center space-x-2 border border-border p-2 rounded-md bg-secondary/20">
+                                    <Switch 
+                                        id="text-bg" 
+                                        checked={activeSlide.text_bg_enabled !== false}
+                                        onCheckedChange={(v) => handleUpdateSlide('text_bg_enabled', v)}
+                                    />
+                                    <Label htmlFor="text-bg" className="text-xs cursor-pointer">Enable Text Background</Label>
+                                </div>
                             </div>
 
                              <div className="space-y-2">

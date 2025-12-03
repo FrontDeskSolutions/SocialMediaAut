@@ -1,19 +1,14 @@
 
-/* Text Effects */
+/* Text Effects using CSS Variables for dynamic theming */
+
 .effect-glow {
-  text-shadow: 0 0 30px currentColor;
+  text-shadow: 0 0 30px var(--theme-headline);
 }
 
 .effect-gradient {
-  background: linear-gradient(to bottom right, #ffffff, #999999);
+  background: linear-gradient(to bottom right, var(--theme-headline), var(--theme-subheadline));
   -webkit-background-clip: text;
-  color: transparent !important; /* Force transparency for clip to work */
-}
-/* Hero Inverted Gradient override */
-.bg-primary .effect-gradient {
-    background: linear-gradient(to bottom right, #000000, #666666);
-    -webkit-background-clip: text;
-    color: transparent !important;
+  color: transparent !important;
 }
 
 .effect-chrome {
@@ -22,7 +17,7 @@
     #eeeeee 0%,
     #ffffff 50%,
     #aaaaaa 51%,
-    #000000 100%
+    var(--theme-headline) 100%
   );
   -webkit-background-clip: text;
   color: transparent !important;
@@ -32,13 +27,12 @@
 .effect-glitch {
   position: relative;
 }
-/* Glitch needs raw text color to work, handled by component style */
 
 .effect-neon {
   color: #fff;
   text-shadow:
     0 0 5px #fff,
     0 0 10px #fff,
-    0 0 20px currentColor,
-    0 0 40px currentColor;
+    0 0 20px var(--theme-headline),
+    0 0 40px var(--theme-headline);
 }
