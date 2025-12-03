@@ -1,0 +1,33 @@
+{
+  "timestamp": "2025-12-03T01:05:11.287487",
+  "total_tests": 5,
+  "passed_tests": 5,
+  "success_rate": 100.0,
+  "results": [
+    {
+      "test": "Health Check",
+      "success": true,
+      "details": ""
+    },
+    {
+      "test": "List Generations",
+      "success": true,
+      "details": ""
+    },
+    {
+      "test": "Trigger Generation",
+      "success": true,
+      "details": ""
+    },
+    {
+      "test": "Get Generation",
+      "success": true,
+      "details": ""
+    },
+    {
+      "test": "Update Generation",
+      "success": true,
+      "details": ""
+    }
+  ]
+}
