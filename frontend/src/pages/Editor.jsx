@@ -108,20 +108,17 @@ const Editor = () => {
     }
   };
 
+import { getGeneration, updateGeneration, generateImage, triggerViralVisuals } from '../services/api';
+// ...
   const handleGenerateViralVisuals = async () => {
     setGeneratingImage(true);
     try {
-      // Generate viral visuals for all slides
-      const updatedSlides = await Promise.all(
-        generation.slides.map(async (slide) => {
-          const result = await generateImage(id, slide.id);
-          return { ...slide, background_url: result.url };
-        })
-      );
-      setGeneration({ ...generation, slides: updatedSlides });
-      toast.success("Viral visuals generated for all slides");
+      await triggerViralVisuals(id);
+      toast.success("Viral Asset Generation Started (Check back in 1 min)");
+      // Polling or reload logic would be better, but manual reload is fine for MVP
+      setTimeout(loadGeneration, 10000);
     } catch (e) {
-      toast.error("Failed to generate viral visuals");
+      toast.error("Failed to trigger viral visuals");
     } finally {
       setGeneratingImage(false);
     }
