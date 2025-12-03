@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { getGeneration, updateGeneration, generateImage } from '../services/api';
 import { SlideCanvas } from '@/components/SlideCanvas';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import * as htmlToImage from 'html-to-image';
 import { 
   Loader2, 
   Save, 
@@ -91,6 +92,25 @@ const Editor = () => {
     }
   };
 
+  const downloadSlide = async () => {
+    const node = document.getElementById(`slide-${activeSlideIndex}`);
+    if (!node) return;
+    
+    try {
+        const dataUrl = await htmlToImage.toPng(node, {
+            cacheBust: true,
+        });
+        const link = document.createElement('a');
+        link.download = `slide-${activeSlideIndex + 1}.png`;
+        link.href = dataUrl;
+        link.click();
+        toast.success("Exported!");
+    } catch (error) {
+        console.error('Export failed:', error);
+        toast.error("Download failed - try saving first");
+    }
+  };
+
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-background">
@@ -105,6 +125,7 @@ const Editor = () => {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-4">No slides found</h2>
           <p className="text-muted-foreground">This generation doesn't have any slides yet.</p>
+          <Link to="/"><Button className="mt-4">Back to Dashboard</Button></Link>
         </div>
       </div>
     );
@@ -144,20 +165,26 @@ const Editor = () => {
         {/* Header */}
         <div className="border-b border-border bg-card px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white">
-                    <ArrowLeft className="mr-2" />
-                    Back
-                </Button>
+                <Link to="/">
+                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white">
+                        <ArrowLeft className="mr-2" />
+                        Back
+                    </Button>
+                </Link>
                 <div>
-                    <h1 className="text-xl font-bold">{generation.topic}</h1>
+                    <h1 className="text-xl font-bold truncate w-64">{generation.topic}</h1>
                     <p className="text-sm text-muted-foreground">Slide {activeSlideIndex + 1} of {generation.slides.length}</p>
                 </div>
             </div>
             
             <div className="flex items-center gap-2">
-                <Button onClick={handleSave} disabled={saving} className="bg-primary text-black hover:bg-primary/80">
+                <Button onClick={handleSave} disabled={saving} className="bg-secondary text-white hover:bg-secondary/80 border border-border">
                     {saving ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2" />}
                     Save
+                </Button>
+                <Button onClick={downloadSlide} className="bg-primary text-black hover:bg-primary/80">
+                    <Download className="mr-2" size={16} />
+                    Export PNG
                 </Button>
             </div>
         </div>
