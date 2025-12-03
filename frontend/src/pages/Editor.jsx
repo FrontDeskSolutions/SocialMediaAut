@@ -108,8 +108,6 @@ const Editor = () => {
     }
   };
 
-import { getGeneration, updateGeneration, generateImage, triggerViralVisuals } from '../services/api';
-// ...
   const handleGenerateViralVisuals = async () => {
     setGeneratingImage(true);
     try {
