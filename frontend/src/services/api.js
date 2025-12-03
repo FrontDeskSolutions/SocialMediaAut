@@ -27,11 +27,17 @@ export const generateImage = async (genId, slideId) => {
   return res.data;
 };
 
-export const triggerGeneration = async (topic, slideCount = 5, context = "") => {
+export const triggerGeneration = async (topic, slideCount = 5, context = "", theme = "trust_clarity") => {
   const res = await api.post('/webhooks/trigger', { 
     topic, 
     slide_count: slideCount,
-    extra_context: context 
+    extra_context: context,
+    theme
   });
+  return res.data;
+};
+
+export const triggerViralVisuals = async (genId) => {
+  const res = await api.post(`/generations/${genId}/generate-viral-visuals`);
   return res.data;
 };

@@ -2,14 +2,28 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getGenerations, triggerGeneration } from '../services/api';
-import { Plus, Loader2, Image as ImageIcon, Zap } from 'lucide-react';
+import { Plus, Loader2, Image as ImageIcon, Zap, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+
+const themeOptions = [
+  { id: "trust_clarity", name: "Trust & Clarity", color: "#0F172A" },
+  { id: "modern_luxury", name: "Modern Luxury", color: "#1C1C1C" },
+  { id: "swiss_minimalist", name: "Swiss Minimalist", color: "#000000" },
+  { id: "forest_executive", name: "Forest Executive", color: "#064E3B" },
+  { id: "warm_editorial", name: "Warm Editorial", color: "#4A3B32" },
+  { id: "dark_mode_premium", name: "Dark Mode Premium", color: "#18181B" },
+  { id: "slate_clay", name: "Slate & Clay", color: "#334155" },
+  { id: "royal_academic", name: "Royal Academic", color: "#2E1065" },
+  { id: "industrial_chic", name: "Industrial Chic", color: "#262626" },
+  { id: "sunset_corporate", name: "Sunset Corporate", color: "#7C2D12" },
+];
 
 const Dashboard = () => {
   const [generations, setGenerations] = useState([]);
@@ -18,6 +32,7 @@ const Dashboard = () => {
   const [slideCount, setSlideCount] = useState(5);
   const [creating, setCreating] = useState(false);
   const [viralMode, setViralMode] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState("trust_clarity");
 
   const load = async () => {
     try {
@@ -41,9 +56,8 @@ const Dashboard = () => {
     if (!newTopic) return;
     setCreating(true);
     try {
-      // Trigger with extra_context='viral' if switch is on
-      await triggerGeneration(newTopic, slideCount, viralMode ? 'viral' : '');
-      toast.success(viralMode ? "Viral AI Generation started (This takes ~1 min)" : "Standard Generation started");
+      await triggerGeneration(newTopic, slideCount, viralMode ? 'viral' : '', selectedTheme);
+      toast.success(viralMode ? "Text Generation Started (Images Manual)" : "Generation started");
       setNewTopic('');
       load();
     } catch (e) {
@@ -89,15 +103,34 @@ const Dashboard = () => {
                     />
                 </div>
 
+                <div className="space-y-2 w-48">
+                    <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Palette size={12} /> THEME</label>
+                    <Select value={selectedTheme} onValueChange={setSelectedTheme}>
+                        <SelectTrigger className="bg-secondary border-border h-10">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {themeOptions.map(t => (
+                                <SelectItem key={t.id} value={t.id}>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full" style={{backgroundColor: t.color}} />
+                                        <span className="text-xs">{t.name}</span>
+                                    </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
                 <Button type="submit" disabled={creating} className={cn("text-black h-10 w-40", viralMode ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600" : "bg-primary hover:bg-primary/80")} data-testid="new-project-button">
                     {creating ? <Loader2 className="animate-spin" /> : (viralMode ? <Zap className="mr-2" /> : <Plus className="mr-2" />)}
-                    {viralMode ? "GENERATE VIRAL" : "NEW PROJECT"}
+                    {viralMode ? "GENERATE" : "NEW PROJECT"}
                 </Button>
             </form>
             
             <div className="flex items-center space-x-2 pt-2 border-t border-border">
                 <Switch id="viral-mode" checked={viralMode} onCheckedChange={setViralMode} />
-                <Label htmlFor="viral-mode" className="text-xs text-muted-foreground cursor-pointer">Enable <strong>AI Control Room</strong> (Nano Banana Pro)</Label>
+                <Label htmlFor="viral-mode" className="text-xs text-muted-foreground cursor-pointer">Enable <strong>AI Control Room</strong> (Advanced AI Flow)</Label>
             </div>
         </div>
       </div>

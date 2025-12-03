@@ -56,13 +56,12 @@ class KieService:
                         res = json.loads(result_json)
                         return res.get('resultUrls', [])[0]
                     except:
-                        return result_json # Sometimes it might be direct?
+                        return result_json 
                 return None
             elif state == 'fail':
                 logger.error(f"Kie Task Failed: {data.get('failMsg')}")
                 raise Exception("Task state: fail") # Don't retry on fail state
             
-            # If generating/queuing, raise Exception to trigger retry
             raise Exception("Task still processing")
 
     async def generate_hero_image(self, prompt: str) -> str:
@@ -80,7 +79,7 @@ class KieService:
         """Removes text from image using google/nano-banana-edit"""
         logger.info(f"Removing text from: {image_url}")
         task_id = await self.create_task("google/nano-banana-edit", {
-            "prompt": "give me this image with no text, erase text, clean background, high quality",
+            "prompt": "give me this image with no text, erase text",
             "image_urls": [image_url],
             "output_format": "png",
             "image_size": "1:1"

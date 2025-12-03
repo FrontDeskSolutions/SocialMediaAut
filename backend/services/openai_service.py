@@ -24,13 +24,11 @@ class OpenAIService:
         Return a JSON object with:
         1. 'hero': {{
             'topheadline': 'Short punchy hook',
-            'bottomheadline': 'Intriguing subhook',
-            'color1': 'Hex color 1 (Dark/Vibrant)',
-            'color2': 'Hex color 2 (Complementary)'
+            'bottomheadline': 'Intriguing subhook'
         }}
         2. 'slides': Array of {count-1} objects (excluding hero) for the body slides. Each must have:
             - 'title': Headline
-            - 'content': Body text (max 20 words)
+            - 'content': Body text (max 40 words)
         """
         
         try:
@@ -45,20 +43,23 @@ class OpenAIService:
             raise
 
     async def generate_slides_content(self, topic: str, count: int = 5, context: str = "") -> list[dict]:
-        # (Existing method kept for compatibility)
         system_prompt = f"""You are a social media expert. Generate a {count}-slide carousel. 
         Return ONLY a JSON object with a 'slides' key containing an array of {count} objects.
+        
         Structure logic:
-        - Slide 1 MUST be type='hero' (Hook the reader).
-        - Middle slides MUST be type='body' (Value/Educational).
-        - Last slide MUST be type='cta' (Call to Action).
+        - Slide 1 MUST be type='hero'.
+        - Middle slides MUST be type='body'.
+        - Last slide MUST be type='cta'.
+
         Each object must have:
         - 'type': 'hero', 'body', or 'cta'.
         - 'title': Short, punchy headline.
-        - 'content': The main text (max 30 words).
+        - 'content': The main text (max 40 words).
         - 'background_prompt': A visual description for DALL-E 3 (Abstract, texture, minimalist, 4k, no text).
         """
+        
         user_prompt = f"Topic: {topic}\nSlide Count: {count}\nContext: {context}"
+
         try:
             response = await self.client.chat.completions.create(
                 model=self.model,
