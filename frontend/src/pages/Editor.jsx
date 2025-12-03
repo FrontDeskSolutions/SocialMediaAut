@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import * as htmlToImage from 'html-to-image';
 import { 
-  Loader2, Save, Download, Wand2, ArrowLeft, Layout, Type, Palette, Sparkles, Plus, Trash2, Pipette, Frame
+  Loader2, Save, Download, Wand2, ArrowLeft, Layout, Type, Palette, Sparkles, Plus, Trash2, Pipette, Frame, Zap
 } from 'lucide-react';
 import '@/styles/effects.css';
 
