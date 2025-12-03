@@ -47,17 +47,18 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-8 max-w-7xl mx-auto space-y-8" data-testid="dashboard-container">
       <div className="flex justify-between items-center">
-        <h1 className="text-4xl font-bold text-white font-heading">CONTROL ROOM</h1>
+        <h1 className="text-4xl font-bold text-white font-heading" data-testid="dashboard-title">CONTROL ROOM</h1>
         <form onSubmit={handleCreate} className="flex gap-4">
             <input 
                 value={newTopic}
                 onChange={e => setNewTopic(e.target.value)}
                 placeholder="Enter topic..."
                 className="bg-secondary border border-border p-2 text-white w-64 focus:outline-none focus:border-primary"
+                data-testid="new-topic-input"
             />
-            <Button type="submit" disabled={creating} className="bg-primary text-black hover:bg-primary/80">
+            <Button type="submit" disabled={creating} className="bg-primary text-black hover:bg-primary/80" data-testid="new-project-button">
                 {creating ? <Loader2 className="animate-spin" /> : <Plus />}
                 NEW PROJECT
             </Button>
