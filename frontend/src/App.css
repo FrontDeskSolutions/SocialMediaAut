@@ -1,47 +1,8 @@
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  :root {
-    --background: 5 0% 2%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 4%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 4%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 72 100% 50%; /* #ccff00 */
-    --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 64%;
-    --accent: 0 0% 10%;
-    --accent-foreground: 72 100% 50%;
-    --destructive: 340 100% 50%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 72 100% 50%;
-    --radius: 0px;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground font-body;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading;
-  }
-}
-
 /* Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;900&family=Manrope:wght@400;500&family=JetBrains+Mono&family=Playfair+Display:wght@700&display=swap');
+/* New Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Orbitron:wght@700&family=Lora:ital@1&display=swap');
 
 .font-heading { font-family: 'Outfit', sans-serif; }
 .font-body { font-family: 'Manrope', sans-serif; }
@@ -49,91 +10,12 @@
 .font-serif { font-family: 'Playfair Display', serif; }
 .font-black { font-family: 'Outfit', sans-serif; font-weight: 900; }
 
-/* Text Effects */
-.effect-glow {
-  text-shadow: 0 0 20px currentColor;
-}
+/* New Font Classes */
+.font-handwritten { font-family: 'Permanent Marker', cursive; }
+.font-futuristic { font-family: 'Orbitron', sans-serif; }
+.font-editorial { font-family: 'Lora', serif; font-style: italic; }
 
-.effect-gradient {
-  background: linear-gradient(to bottom right, #fff, #666);
-  -webkit-background-clip: text;
-  color: transparent;
-}
-.effect-gradient.text-primary {
-  background: linear-gradient(to bottom right, #ccff00, #00ff99);
-  -webkit-background-clip: text;
-  color: transparent;
-}
-
-.effect-chrome {
-  background: linear-gradient(
-    to bottom,
-    #ccc 0%,
-    #fff 50%,
-    #888 51%,
-    #333 100%
-  );
-  -webkit-background-clip: text;
-  color: transparent;
-  text-shadow: 0 2px 5px rgba(0,0,0,0.5);
-}
-
-.effect-glitch {
-  position: relative;
-}
-.effect-glitch::before,
-.effect-glitch::after {
-  content: attr(data-text);
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-.effect-glitch::before {
-  left: 2px;
-  text-shadow: -1px 0 red;
-  clip: rect(24px, 550px, 90px, 0);
-  animation: glitch-anim-2 3s infinite linear alternate-reverse;
-}
-.effect-glitch::after {
-  left: -2px;
-  text-shadow: -1px 0 blue;
-  clip: rect(85px, 550px, 140px, 0);
-  animation: glitch-anim 2.5s infinite linear alternate-reverse;
-}
-
-.effect-neon {
-  color: #fff;
-  text-shadow:
-    0 0 7px #fff,
-    0 0 10px #fff,
-    0 0 21px #fff,
-    0 0 42px currentColor,
-    0 0 82px currentColor;
-}
-
-@keyframes glitch-anim {
-  0% { clip: rect(39px, 9999px, 71px, 0); }
-  20% { clip: rect(3px, 9999px, 5px, 0); }
-  40% { clip: rect(6px, 9999px, 38px, 0); }
-  60% { clip: rect(13px, 9999px, 43px, 0); }
-  80% { clip: rect(44px, 9999px, 93px, 0); }
-  100% { clip: rect(54px, 9999px, 47px, 0); }
-}
-@keyframes glitch-anim-2 {
-  0% { clip: rect(29px, 9999px, 86px, 0); }
-  20% { clip: rect(32px, 9999px, 26px, 0); }
-  40% { clip: rect(1px, 9999px, 83px, 0); }
-  60% { clip: rect(20px, 9999px, 98px, 0); }
-  80% { clip: rect(34px, 9999px, 8px, 0); }
-  100% { clip: rect(60px, 9999px, 13px, 0); }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
+/* Effects ... (standard) */
+.effect-glow { text-shadow: 0 0 30px var(--theme-headline); }
+.animate-spin { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
