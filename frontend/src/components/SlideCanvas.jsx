@@ -39,6 +39,15 @@ const themeMap = {
 };
 
 export const SlideCanvas = ({ slide, id }) => {
+  // Add safety check for slide object
+  if (!slide) {
+    return (
+      <div id={id} className="relative w-[1080px] h-[1080px] flex items-center justify-center bg-gray-200">
+        <div className="text-gray-500">Loading slide...</div>
+      </div>
+    );
+  }
+
   const bgUrl = slide.background_url 
     ? `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001'}/api/proxy/image?url=${encodeURIComponent(slide.background_url)}`
     : null;
