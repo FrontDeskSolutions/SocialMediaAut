@@ -40,14 +40,15 @@ async def generate_slide_image(id: str, slide_id: str):
     service = OpenAIService()
     url = await service.generate_image(slide['background_prompt'])
     
+    # Apply new defaults for standard generation too
     await db.generations.update_one(
         {"id": id, "slides.id": slide_id}, 
         {"$set": {
             "slides.$.background_url": url,
-            # Defaults for standard generation
-            "slides.$.text_position": "middle_center",
-            "slides.$.container_opacity": 0.8,
-            "slides.$.headline_color": "#ccff00" # High contrast default
+            "slides.$.layout": "centered_stack",
+            "slides.$.theme_mode": "dark",
+            "slides.$.glass_intensity": "high",
+            "slides.$.container_opacity": 0.6
         }}
     )
     return {"url": url}
@@ -65,11 +66,9 @@ async def process_viral_visuals(generation_id: str):
 
         hero_slide = slides[0]
         
-        # 1. Generate Hero Image
         logger.info(f"Generating Viral Hero for {generation_id}")
         hero_url = await kie_service.generate_hero_image(hero_slide['background_prompt'])
         
-        # 2. Generate Clean Background
         clean_url = None
         design_rec = {}
         
@@ -79,7 +78,6 @@ async def process_viral_visuals(generation_id: str):
             if not clean_url:
                 clean_url = hero_url 
 
-            # 3. Analyze Image for Design
             logger.info(f"Analyzing Background for Design Recommendations...")
             design_rec = await openai_service.analyze_design_from_image(clean_url)
             logger.info(f"Design Recs: {design_rec}")
@@ -92,14 +90,14 @@ async def process_viral_visuals(generation_id: str):
             for i in range(1, len(slides)):
                 slides[i]['background_url'] = clean_url
                 if clean_url and design_rec:
-                    slides[i]['font_color'] = design_rec.get('font_color')
-                    slides[i]['headline_color'] = design_rec.get('headline_color')
-                    slides[i]['font'] = design_rec.get('font', 'modern')
-                    slides[i]['text_position'] = design_rec.get('text_position', 'middle_center')
-                    slides[i]['text_align'] = design_rec.get('text_align', 'center')
-                    slides[i]['container_opacity'] = design_rec.get('container_opacity', 0.8)
-                    slides[i]['text_shadow'] = design_rec.get('text_shadow', False)
-                    slides[i]['text_width'] = design_rec.get('text_width', 'medium')
+                    slides[i]['headline_color'] = design_rec.get('primaryColor')
+                    slides[i]['font_color'] = design_rec.get('bodyColor')
+                    slides[i]['layout'] = design_rec.get('layout', 'centered_stack')
+                    
+                    slides[i]['theme_mode'] = design_rec.get('themeMode', 'dark')
+                    slides[i]['glass_intensity'] = design_rec.get('glassIntensity', 'high')
+                    slides[i]['container_opacity'] = design_rec.get('containerOpacity', 0.6)
+                    slides[i]['text_shadow'] = design_rec.get('textShadow', True)
 
             if slides[-1]['type'] != 'cta':
                  slides[-1]['type'] = 'cta'

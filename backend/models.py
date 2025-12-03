@@ -27,7 +27,7 @@ class Slide(BaseModel):
     
     # Design Properties
     type: str = "body"       
-    layout: str = "default" 
+    layout: str = "centered_stack" # Default changed to new standard
     variant: str = "1"       
     
     # Style Properties
@@ -35,16 +35,22 @@ class Slide(BaseModel):
     text_effect: str = "none"
     theme: str = "trust_clarity" 
     arrow_color: str = "#ffffff"
-    text_bg_enabled: bool = True
     
     # AI-Analyzed / Advanced Layout Properties
     font_color: Optional[str] = None # Body text color
-    headline_color: Optional[str] = None # NEW: Separate headline color
+    headline_color: Optional[str] = None # Headline color (primary accent)
+    
+    # Layout & Position
     text_position: str = "middle_center"
     text_align: str = "center" 
-    container_opacity: float = 0.8 
-    text_shadow: bool = False
     text_width: str = "medium" 
+    
+    # Container / Glassmorphism
+    text_bg_enabled: bool = True
+    container_opacity: float = 0.6 
+    glass_intensity: str = "high" # none, low, medium, high
+    theme_mode: str = "dark" # dark (light text on dark bg), light (dark text on light bg)
+    text_shadow: bool = False
 
 class GenerationBase(BaseModel):
     topic: str

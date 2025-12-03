@@ -15,23 +15,9 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import * as htmlToImage from 'html-to-image';
 import { 
-  Loader2, Save, Download, Wand2, ArrowLeft, Layout, Type, Palette, Sparkles, Plus, Trash2, Pipette, Frame, Zap, Move, AlignLeft, AlignCenter, AlignRight
+  Loader2, Save, Download, Wand2, ArrowLeft, Layout, Type, Palette, Sparkles, Plus, Trash2, Pipette, Frame, Zap, Move, AlignLeft, AlignCenter, AlignRight, Eye
 } from 'lucide-react';
 import '@/styles/effects.css';
-
-// ... themeOptions ...
-const themeOptions = [
-  { id: "trust_clarity", name: "Trust & Clarity", color: "#0F172A" },
-  { id: "modern_luxury", name: "Modern Luxury", color: "#1C1C1C" },
-  { id: "swiss_minimalist", name: "Swiss Minimalist", color: "#000000" },
-  { id: "forest_executive", name: "Forest Executive", color: "#064E3B" },
-  { id: "warm_editorial", name: "Warm Editorial", color: "#4A3B32" },
-  { id: "dark_mode_premium", name: "Dark Mode Premium", color: "#18181B" },
-  { id: "slate_clay", name: "Slate & Clay", color: "#334155" },
-  { id: "royal_academic", name: "Royal Academic", color: "#2E1065" },
-  { id: "industrial_chic", name: "Industrial Chic", color: "#262626" },
-  { id: "sunset_corporate", name: "Sunset Corporate", color: "#7C2D12" },
-];
 
 const Editor = () => {
   const { id } = useParams();
@@ -66,17 +52,11 @@ const Editor = () => {
     if (!generation || !activeSlide) return;
     
     let updatedSlides = [...generation.slides];
-    
-    if (field === 'theme') {
-        updatedSlides = updatedSlides.map(slide => ({ ...slide, theme: value }));
-        toast.info("Theme updated for all slides");
-    } else {
-        updatedSlides[activeSlideIndex] = { ...activeSlide, [field]: value };
-    }
-
+    updatedSlides[activeSlideIndex] = { ...activeSlide, [field]: value };
     setGeneration({ ...generation, slides: updatedSlides });
   };
 
+  // ... (Save, Generate, Download handlers same as before) ...
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -147,15 +127,14 @@ const Editor = () => {
         content: "Add content...",
         background_prompt: "Abstract",
         type: "body",
-        layout: "default",
-        theme: activeSlide?.theme || 'trust_clarity',
+        layout: "centered_stack",
+        theme_mode: "dark",
         text_bg_enabled: true
     };
     const slidesWithoutCTA = generation.slides.filter(s => s.type !== 'cta');
     const ctaSlide = generation.slides.find(s => s.type === 'cta');
     const newSlides = [...slidesWithoutCTA, newSlide];
     if (ctaSlide) newSlides.push(ctaSlide);
-    
     setGeneration({ ...generation, slides: newSlides });
     setActiveSlideIndex(newSlides.length - (ctaSlide ? 2 : 1));
   };
@@ -225,7 +204,6 @@ const Editor = () => {
                     </TabsList>
                     
                     <div className="p-6 space-y-6">
-                        {/* Content Tab */}
                         <TabsContent value="content" className="space-y-6 mt-0">
                             <div className="space-y-2">
                                 <label className="text-xs font-mono text-muted-foreground">HEADLINE</label>
@@ -235,19 +213,19 @@ const Editor = () => {
                                 <label className="text-xs font-mono text-muted-foreground">BODY</label>
                                 <Textarea value={activeSlide.content} onChange={e => handleUpdateSlide('content', e.target.value)} className="bg-secondary border-transparent font-body" rows={6} />
                             </div>
-                            {/* Manual Colors for overrides */}
+                            {/* Colors */}
                             <div className="space-y-2">
                                 <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Pipette size={12} /> HEADLINE COLOR</label>
                                 <div className="flex gap-2 items-center">
-                                    <div className="w-8 h-8 rounded-full border border-border" style={{backgroundColor: activeSlide.headline_color || '#ffffff'}} />
-                                    <input type="color" value={activeSlide.headline_color || '#ffffff'} onChange={(e) => handleUpdateSlide('headline_color', e.target.value)} className="flex-1 h-8 bg-secondary border border-border cursor-pointer" />
+                                    <div className="w-8 h-8 rounded-full border border-border" style={{backgroundColor: activeSlide.headline_color || '#FACC15'}} />
+                                    <input type="color" value={activeSlide.headline_color || '#FACC15'} onChange={(e) => handleUpdateSlide('headline_color', e.target.value)} className="flex-1 h-8 bg-secondary border border-border cursor-pointer" />
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Pipette size={12} /> BODY COLOR</label>
                                 <div className="flex gap-2 items-center">
-                                    <div className="w-8 h-8 rounded-full border border-border" style={{backgroundColor: activeSlide.font_color || '#ffffff'}} />
-                                    <input type="color" value={activeSlide.font_color || '#ffffff'} onChange={(e) => handleUpdateSlide('font_color', e.target.value)} className="flex-1 h-8 bg-secondary border border-border cursor-pointer" />
+                                    <div className="w-8 h-8 rounded-full border border-border" style={{backgroundColor: activeSlide.font_color || '#FFFFFF'}} />
+                                    <input type="color" value={activeSlide.font_color || '#FFFFFF'} onChange={(e) => handleUpdateSlide('font_color', e.target.value)} className="flex-1 h-8 bg-secondary border border-border cursor-pointer" />
                                 </div>
                             </div>
                             <div className="space-y-2">
@@ -257,59 +235,47 @@ const Editor = () => {
                             </div>
                         </TabsContent>
 
-                        {/* Design Tab */}
                         <TabsContent value="design" className="space-y-6 mt-0">
-                             <div className="space-y-2">
-                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Palette size={12} /> GLOBAL THEME</label>
-                                <Select value={activeSlide.theme || 'trust_clarity'} onValueChange={v => handleUpdateSlide('theme', v)}>
-                                    <SelectTrigger className="bg-secondary border-transparent"><SelectValue /></SelectTrigger>
-                                    <SelectContent className="max-h-64">
-                                        {themeOptions.map(t => (
-                                            <SelectItem key={t.id} value={t.id}>
-                                                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{backgroundColor: t.color}} />{t.name}</div>
-                                            </SelectItem>
-                                        ))}
+                            
+                            <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Eye size={12} /> GLASS & THEME</label>
+                                <div className="grid grid-cols-2 gap-2 mb-2">
+                                    <Button variant={activeSlide.theme_mode === 'dark' ? 'default' : 'outline'} onClick={() => handleUpdateSlide('theme_mode', 'dark')} className="text-xs h-8">Dark Mode</Button>
+                                    <Button variant={activeSlide.theme_mode === 'light' ? 'default' : 'outline'} onClick={() => handleUpdateSlide('theme_mode', 'light')} className="text-xs h-8">Light Mode</Button>
+                                </div>
+                                <Select value={activeSlide.glass_intensity || 'high'} onValueChange={v => handleUpdateSlide('glass_intensity', v)}>
+                                    <SelectTrigger className="bg-secondary border-transparent"><SelectValue placeholder="Glass Intensity" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">No Blur</SelectItem>
+                                        <SelectItem value="low">Low Blur</SelectItem>
+                                        <SelectItem value="medium">Medium Blur</SelectItem>
+                                        <SelectItem value="high">High Blur</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Frame size={12} /> CONTAINER STYLE</label>
+                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Frame size={12} /> CONTAINER OPACITY</label>
                                 <div className="flex items-center justify-between border border-border p-2 rounded-md bg-secondary/20 mb-2">
-                                    <Label htmlFor="text-bg" className="text-xs">Enable Body Background</Label>
+                                    <Label htmlFor="text-bg" className="text-xs">Enable Container</Label>
                                     <Switch id="text-bg" checked={activeSlide.text_bg_enabled !== false} onCheckedChange={(v) => handleUpdateSlide('text_bg_enabled', v)} />
                                 </div>
                                 <div className="space-y-1">
-                                    <div className="flex justify-between text-xs text-muted-foreground"><span>Opacity</span><span>{Math.round((activeSlide.container_opacity || 0.8) * 100)}%</span></div>
-                                    <Slider value={[activeSlide.container_opacity !== undefined ? activeSlide.container_opacity : 0.8]} min={0} max={1} step={0.1} onValueChange={v => handleUpdateSlide('container_opacity', v[0])} />
+                                    <div className="flex justify-between text-xs text-muted-foreground"><span>Opacity</span><span>{Math.round((activeSlide.container_opacity !== undefined ? activeSlide.container_opacity : 0.6) * 100)}%</span></div>
+                                    <Slider value={[activeSlide.container_opacity !== undefined ? activeSlide.container_opacity : 0.6]} min={0} max={1} step={0.1} onValueChange={v => handleUpdateSlide('container_opacity', v[0])} />
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Move size={12} /> POSITION</label>
-                                <Select value={activeSlide.text_position || 'middle_center'} onValueChange={v => handleUpdateSlide('text_position', v)}>
+                             <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Layout size={12} /> LAYOUT</label>
+                                <Select value={activeSlide.layout || 'centered_stack'} onValueChange={v => handleUpdateSlide('layout', v)}>
                                     <SelectTrigger className="bg-secondary border-transparent"><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="top_left">Top Left</SelectItem>
-                                        <SelectItem value="top_center">Top Center</SelectItem>
-                                        <SelectItem value="top_right">Top Right</SelectItem>
-                                        <SelectItem value="middle_left">Middle Left</SelectItem>
-                                        <SelectItem value="middle_center">Middle Center</SelectItem>
-                                        <SelectItem value="middle_right">Middle Right</SelectItem>
-                                        <SelectItem value="bottom_left">Bottom Left</SelectItem>
-                                        <SelectItem value="bottom_center">Bottom Center</SelectItem>
-                                        <SelectItem value="bottom_right">Bottom Right</SelectItem>
+                                        <SelectItem value="centered_stack">Centered Stack</SelectItem>
+                                        <SelectItem value="split_left">Split Left</SelectItem>
+                                        <SelectItem value="split_right">Split Right</SelectItem>
                                     </SelectContent>
                                 </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><AlignLeft size={12} /> ALIGNMENT</label>
-                                <div className="flex gap-2">
-                                    <Button variant={activeSlide.text_align === 'left' ? 'default' : 'outline'} onClick={() => handleUpdateSlide('text_align', 'left')} className="flex-1 h-8"><AlignLeft size={14} /></Button>
-                                    <Button variant={activeSlide.text_align === 'center' ? 'default' : 'outline'} onClick={() => handleUpdateSlide('text_align', 'center')} className="flex-1 h-8"><AlignCenter size={14} /></Button>
-                                    <Button variant={activeSlide.text_align === 'right' ? 'default' : 'outline'} onClick={() => handleUpdateSlide('text_align', 'right')} className="flex-1 h-8"><AlignRight size={14} /></Button>
-                                </div>
                             </div>
 
                             <div className="space-y-2">

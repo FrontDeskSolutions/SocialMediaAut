@@ -45,21 +45,23 @@ class OpenAIService:
         """
         Uses GPT-4o Vision to analyze the background image and recommend design settings.
         """
-        system_prompt = """You are an expert UI/UX designer. 
-        Analyze this background image for a social media slide.
+        system_prompt = """You are an expert UI/UX designer specializing in typography and accessibility.
+        Analyze the attached background image to determine the optimal styling for a text overlay.
         
-        Determine optimal settings for separated Headline and Body text.
+        Design Strategy:
+        - Dark Glassmorphism: If background is dark/neon, use dark semi-transparent box.
+        - Light Glassmorphism: If background is light, use white semi-transparent box.
+        - Visual Hierarchy: Headline should separate from Body. Headline contrast is key.
         
         Return JSON:
         {
-            "headline_color": "Hex code for the headline (should be vibrant/high-contrast, different from body)",
-            "font_color": "Hex code for body text (high legibility)",
-            "text_position": "middle_center, top_left, top_right, bottom_left, bottom_right",
-            "text_align": "left, center, right",
-            "container_opacity": "Float 0.0 to 1.0",
-            "text_shadow": true/false,
-            "font": "modern",
-            "text_width": "medium"
+            "themeMode": "dark" (if bg is dark, text will be light) OR "light" (if bg is light, text will be dark),
+            "primaryColor": "Hex code for Headline (pick a vibrant accent from the image)",
+            "bodyColor": "Hex code for Body text (usually white or black)",
+            "glassIntensity": "high", "medium", "low", or "none",
+            "layout": "centered_stack" (default) or "split_left" / "split_right" if clear negative space exists,
+            "containerOpacity": Float 0.0 to 1.0 (0.6 is standard for glass),
+            "textShadow": boolean
         }
         """
         
@@ -82,13 +84,13 @@ class OpenAIService:
         except Exception as e:
             logger.error(f"Vision Analysis Error: {e}")
             return {
-                "headline_color": "#ccff00",
-                "font_color": "#ffffff", 
-                "text_position": "middle_center",
-                "text_align": "center",
-                "container_opacity": 0.8,
-                "text_shadow": False,
-                "font": "modern"
+                "themeMode": "dark",
+                "primaryColor": "#FACC15", 
+                "bodyColor": "#FFFFFF",
+                "glassIntensity": "high",
+                "layout": "centered_stack",
+                "containerOpacity": 0.6,
+                "textShadow": True
             }
 
     async def generate_slides_content(self, topic: str, count: int = 5, context: str = "") -> list[dict]:
