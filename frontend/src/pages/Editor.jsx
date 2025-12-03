@@ -1,10 +1,9 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getGeneration, updateGeneration, generateImage } from '../services/api';
 import { SlideCanvas } from '@/components/SlideCanvas';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,6 +16,8 @@ import {
   Loader2, Save, Download, Wand2, ArrowLeft, Layout, Type, Palette, Sparkles, Plus, Trash2, Pipette, Frame, Zap
 } from 'lucide-react';
 import '@/styles/effects.css';
+
+// ... (keep imports same as provided context)
 
 const themeOptions = [
   { id: "trust_clarity", name: "Trust & Clarity", color: "#0F172A" },
@@ -68,6 +69,8 @@ const Editor = () => {
     if (field === 'theme') {
         updatedSlides = updatedSlides.map(slide => ({ ...slide, theme: value }));
         toast.info("Theme updated for all slides");
+    } else if (field === 'text_bg_enabled_global') {
+        updatedSlides = updatedSlides.map(slide => ({ ...slide, text_bg_enabled: value }));
     } else {
         updatedSlides[activeSlideIndex] = { ...activeSlide, [field]: value };
     }
@@ -120,16 +123,14 @@ const Editor = () => {
   };
 
   const handleGenerateViralVisuals = async () => {
-    // Simplified trigger for Viral Visuals
     setGeneratingImage(true);
     try {
-        // Call the endpoint that triggers background processing for ALL slides
-        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/generations/${id}/generate-viral-visuals`, {
+        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001'}/api/generations/${id}/generate-viral-visuals`, {
             method: 'POST',
         });
         if (res.ok) {
             toast.success("Generating Assets... (Check back in 1 min)");
-            setTimeout(loadGeneration, 15000); // Auto reload
+            setTimeout(loadGeneration, 15000);
         } else {
             toast.error("Failed to trigger");
         }
@@ -143,7 +144,6 @@ const Editor = () => {
   if (loading) return <div className="h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary" /></div>;
   if (!generation) return <div>Not Found</div>;
 
-  // ... addSlide/deleteSlide ...
   const addSlide = () => {
     const newSlide = {
         id: crypto.randomUUID(),
@@ -152,11 +152,18 @@ const Editor = () => {
         background_prompt: "Abstract",
         type: "body",
         layout: "default",
-        theme: activeSlide?.theme || 'trust_clarity'
+        theme: activeSlide?.theme || 'trust_clarity',
+        text_bg_enabled: true
     };
-    const newSlides = [...generation.slides, newSlide];
+    // Ensure CTA is last
+    const slidesWithoutCTA = generation.slides.filter(s => s.type !== 'cta');
+    const ctaSlide = generation.slides.find(s => s.type === 'cta');
+    
+    const newSlides = [...slidesWithoutCTA, newSlide];
+    if (ctaSlide) newSlides.push(ctaSlide); // Keep CTA at end
+    
     setGeneration({ ...generation, slides: newSlides });
-    setActiveSlideIndex(newSlides.length - 1);
+    setActiveSlideIndex(newSlides.length - (ctaSlide ? 2 : 1));
   };
 
   const deleteSlide = (e, index) => {
@@ -168,8 +175,9 @@ const Editor = () => {
   };
 
   return (
-    <div className="h-screen bg-background text-white flex flex-col">
-        <div className="border-b border-border bg-card px-6 py-4 flex items-center justify-between">
+    <div className="h-screen bg-background text-foreground flex flex-col">
+        {/* Header */}
+        <div className="border-b border-border bg-card px-6 py-4 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-4">
                 <Link to="/"><Button variant="ghost" size="sm"><ArrowLeft className="mr-2" /> Back</Button></Link>
                 <h1 className="text-xl font-bold truncate w-64">{generation.topic}</h1>
@@ -180,18 +188,21 @@ const Editor = () => {
             </div>
         </div>
 
+        {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
-            <div className="w-48 border-r border-border bg-secondary/20 overflow-y-auto p-4 space-y-4 flex flex-col">
+            {/* Sidebar */}
+            <div className="w-48 border-r border-border bg-secondary/20 overflow-y-auto p-4 space-y-4 flex flex-col shrink-0">
                 {generation.slides.map((slide, idx) => (
-                    <div key={slide.id} onClick={() => setActiveSlideIndex(idx)} className={cn("aspect-square bg-black border-2 cursor-pointer relative group", activeSlideIndex === idx ? "border-primary" : "border-border")}>
+                    <div key={slide.id} onClick={() => setActiveSlideIndex(idx)} className={cn("aspect-square bg-black border-2 cursor-pointer relative group shrink-0", activeSlideIndex === idx ? "border-primary" : "border-border")}>
                         <div className="absolute top-1 left-1 bg-black/50 px-2 text-xs text-white">{idx + 1}</div>
                         <button onClick={(e) => deleteSlide(e, idx)} className="absolute top-1 right-1 bg-red-500 p-1 opacity-0 group-hover:opacity-100"><Trash2 size={12} /></button>
-                        <div className="p-2 text-[8px] mt-6 truncate text-white">{slide.title}</div>
+                        <div className="p-2 text-[8px] mt-6 truncate text-white">{slide.title || "Untitled"}</div>
                     </div>
                 ))}
-                <Button onClick={addSlide} variant="outline"><Plus className="mr-2" /> Add Slide</Button>
+                <Button onClick={addSlide} variant="outline" className="shrink-0"><Plus className="mr-2" /> Add Slide</Button>
             </div>
 
+            {/* Canvas */}
             <div className="flex-1 bg-[#0a0a0a] flex items-center justify-center p-12 overflow-hidden relative">
                 <div className="absolute inset-0 opacity-10 pointer-events-none" style={{backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '40px 40px'}} />
                 <div className="transform scale-[0.55] shadow-2xl border border-white/10">
@@ -199,7 +210,8 @@ const Editor = () => {
                 </div>
             </div>
 
-            <div className="w-80 border-l border-border bg-background p-0 overflow-y-auto">
+            {/* Properties Panel */}
+            <div className="w-80 border-l border-border bg-background p-0 overflow-y-auto shrink-0">
                 
                 {generation.mode === 'viral' && !generation.slides[0].background_url && (
                     <div className="p-4 bg-purple-900/20 border-b border-purple-500/30">
@@ -298,6 +310,16 @@ const Editor = () => {
                                     </SelectContent>
                                 </Select>
                             </div>
+
+                            {activeSlide.type !== 'cta' && (
+                                <div className="space-y-2">
+                                    <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Pipette size={12} /> ARROW COLOR</label>
+                                    <div className="flex gap-2 items-center">
+                                        <div className="w-8 h-8 rounded-full border border-border" style={{backgroundColor: activeSlide.arrow_color || '#ffffff'}} />
+                                        <input type="color" value={activeSlide.arrow_color || '#ffffff'} onChange={(e) => handleUpdateSlide('arrow_color', e.target.value)} className="flex-1 h-8 bg-secondary border border-border cursor-pointer" />
+                                    </div>
+                                </div>
+                            )}
                         </TabsContent>
                     </div>
                 </Tabs>
