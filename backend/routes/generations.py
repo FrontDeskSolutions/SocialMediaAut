@@ -40,13 +40,14 @@ async def generate_slide_image(id: str, slide_id: str):
     service = OpenAIService()
     url = await service.generate_image(slide['background_prompt'])
     
-    # Standard flow image generation - apply defaults
     await db.generations.update_one(
         {"id": id, "slides.id": slide_id}, 
         {"$set": {
             "slides.$.background_url": url,
+            # Defaults for standard generation
             "slides.$.text_position": "middle_center",
-            "slides.$.container_opacity": 0.8
+            "slides.$.container_opacity": 0.8,
+            "slides.$.headline_color": "#ccff00" # High contrast default
         }}
     )
     return {"url": url}
@@ -64,11 +65,11 @@ async def process_viral_visuals(generation_id: str):
 
         hero_slide = slides[0]
         
-        # 1. Generate Hero Image (Nano Banana Pro)
+        # 1. Generate Hero Image
         logger.info(f"Generating Viral Hero for {generation_id}")
         hero_url = await kie_service.generate_hero_image(hero_slide['background_prompt'])
         
-        # 2. Generate Clean Background (Nano Banana Edit)
+        # 2. Generate Clean Background
         clean_url = None
         design_rec = {}
         
@@ -78,7 +79,7 @@ async def process_viral_visuals(generation_id: str):
             if not clean_url:
                 clean_url = hero_url 
 
-            # 3. Analyze Image for Design (GPT-4o Vision)
+            # 3. Analyze Image for Design
             logger.info(f"Analyzing Background for Design Recommendations...")
             design_rec = await openai_service.analyze_design_from_image(clean_url)
             logger.info(f"Design Recs: {design_rec}")
@@ -87,21 +88,19 @@ async def process_viral_visuals(generation_id: str):
             # Update Hero
             slides[0]['background_url'] = hero_url
             
-            # Update Body Slides with Clean BG + Recommended Design
+            # Update Body Slides
             for i in range(1, len(slides)):
-                # Keep CTA distinct if possible, but for now apply global style
                 slides[i]['background_url'] = clean_url
                 if clean_url and design_rec:
                     slides[i]['font_color'] = design_rec.get('font_color')
+                    slides[i]['headline_color'] = design_rec.get('headline_color')
                     slides[i]['font'] = design_rec.get('font', 'modern')
-                    # Apply new fields
                     slides[i]['text_position'] = design_rec.get('text_position', 'middle_center')
                     slides[i]['text_align'] = design_rec.get('text_align', 'center')
                     slides[i]['container_opacity'] = design_rec.get('container_opacity', 0.8)
                     slides[i]['text_shadow'] = design_rec.get('text_shadow', False)
                     slides[i]['text_width'] = design_rec.get('text_width', 'medium')
 
-            # Force last slide to be CTA if it was missed
             if slides[-1]['type'] != 'cta':
                  slides[-1]['type'] = 'cta'
 

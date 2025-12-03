@@ -46,17 +46,20 @@ class OpenAIService:
         Uses GPT-4o Vision to analyze the background image and recommend design settings.
         """
         system_prompt = """You are an expert UI/UX designer. 
-        Analyze this background image for a social media slide. Find the "Safe Zone" (negative space) where text will be most readable.
+        Analyze this background image for a social media slide.
+        
+        Determine optimal settings for separated Headline and Body text.
         
         Return JSON:
         {
-            "font_color": "Hex code (high contrast)",
-            "text_position": "One of: top_left, top_center, top_right, middle_left, middle_center, middle_right, bottom_left, bottom_center, bottom_right",
-            "text_align": "left, center, or right",
-            "container_opacity": "Float 0.0 to 1.0 (Use 0.0 if background is clean solid color, 0.9 if busy/noisy)",
-            "text_shadow": true/false (Use true if background is light/complex),
+            "headline_color": "Hex code for the headline (should be vibrant/high-contrast, different from body)",
+            "font_color": "Hex code for body text (high legibility)",
+            "text_position": "middle_center, top_left, top_right, bottom_left, bottom_right",
+            "text_align": "left, center, right",
+            "container_opacity": "Float 0.0 to 1.0",
+            "text_shadow": true/false,
             "font": "modern",
-            "text_width": "narrow, medium, or wide"
+            "text_width": "medium"
         }
         """
         
@@ -79,6 +82,7 @@ class OpenAIService:
         except Exception as e:
             logger.error(f"Vision Analysis Error: {e}")
             return {
+                "headline_color": "#ccff00",
                 "font_color": "#ffffff", 
                 "text_position": "middle_center",
                 "text_align": "center",
@@ -103,11 +107,10 @@ class OpenAIService:
             )
             slides = json.loads(response.choices[0].message.content).get("slides", [])
             
-            # STRICT ENFORCEMENT: Ensure last slide is CTA
+            # Enforce CTA
             if slides:
                 slides[-1]['type'] = 'cta'
                 if 'CTA' not in slides[-1].get('title', '').upper() and 'ACTION' not in slides[-1].get('title', '').upper():
-                    # Only overwrite if it doesn't look like a CTA already
                     slides[-1]['title'] = "Ready to Learn More?"
                     slides[-1]['content'] = "Follow for more insights on this topic."
             

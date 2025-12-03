@@ -4,11 +4,18 @@ from typing import List, Optional
 from datetime import datetime, timezone
 import uuid
 
-# Shared Theme Definitions (kept for reference)
+# Shared Theme Definitions
 THEME_COLORS = {
   "trust_clarity": {"name": "Trust & Clarity", "c1": "#0F172A", "c2": "#475569"},
   "modern_luxury": {"name": "Modern Luxury", "c1": "#1C1C1C", "c2": "#6D6D6D"},
-  # ... others ...
+  "swiss_minimalist": {"name": "Swiss Minimalist", "c1": "#000000", "c2": "#555555"},
+  "forest_executive": {"name": "Forest Executive", "c1": "#064E3B", "c2": "#3F6258"},
+  "warm_editorial": {"name": "Warm Editorial", "c1": "#4A3B32", "c2": "#8C7B70"},
+  "dark_mode_premium": {"name": "Dark Mode Premium", "c1": "#18181B", "c2": "#A1A1AA"},
+  "slate_clay": {"name": "Slate & Clay", "c1": "#334155", "c2": "#94A3B8"},
+  "royal_academic": {"name": "Royal Academic", "c1": "#2E1065", "c2": "#584A6D"},
+  "industrial_chic": {"name": "Industrial Chic", "c1": "#262626", "c2": "#737373"},
+  "sunset_corporate": {"name": "Sunset Corporate", "c1": "#7C2D12", "c2": "#A87666"},
 }
 
 class Slide(BaseModel):
@@ -20,7 +27,7 @@ class Slide(BaseModel):
     
     # Design Properties
     type: str = "body"       
-    layout: str = "default" # Deprecated in favor of detailed positioning, keeping for backward compat
+    layout: str = "default" 
     variant: str = "1"       
     
     # Style Properties
@@ -31,12 +38,13 @@ class Slide(BaseModel):
     text_bg_enabled: bool = True
     
     # AI-Analyzed / Advanced Layout Properties
-    font_color: Optional[str] = None 
-    text_position: str = "middle_center" # top_left, top_center, top_right, middle_left, middle_center, middle_right, bottom_left, bottom_center, bottom_right
-    text_align: str = "center" # left, center, right
+    font_color: Optional[str] = None # Body text color
+    headline_color: Optional[str] = None # NEW: Separate headline color
+    text_position: str = "middle_center"
+    text_align: str = "center" 
     container_opacity: float = 0.8 
     text_shadow: bool = False
-    text_width: str = "medium" # narrow, medium, wide
+    text_width: str = "medium" 
 
 class GenerationBase(BaseModel):
     topic: str
