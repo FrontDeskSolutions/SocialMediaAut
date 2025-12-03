@@ -104,16 +104,16 @@ const Editor = () => {
   const activeSlide = generation.slides[activeSlideIndex];
 
   return (
-    <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
+    <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden" data-testid="editor-container">
         {/* Header */}
         <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-background/80 backdrop-blur">
             <div className="flex items-center gap-4">
-                <Link to="/"><Button variant="ghost" size="icon"><ArrowLeft /></Button></Link>
-                <h1 className="font-heading font-bold text-xl truncate w-64">{generation.topic}</h1>
+                <Link to="/"><Button variant="ghost" size="icon" data-testid="back-button"><ArrowLeft /></Button></Link>
+                <h1 className="font-heading font-bold text-xl truncate w-64" data-testid="project-title">{generation.topic}</h1>
             </div>
             <div className="flex items-center gap-2">
-                <Button onClick={saveChanges} variant="outline" className="gap-2"><Save size={16} /> Save</Button>
-                <Button onClick={downloadSlide} className="bg-primary text-black gap-2"><Download size={16} /> Export PNG</Button>
+                <Button onClick={saveChanges} variant="outline" className="gap-2" data-testid="save-button"><Save size={16} /> Save</Button>
+                <Button onClick={downloadSlide} className="bg-primary text-black gap-2" data-testid="export-button"><Download size={16} /> Export PNG</Button>
             </div>
         </header>
 
@@ -121,11 +121,12 @@ const Editor = () => {
         <div className="flex-1 flex overflow-hidden">
             
             {/* Sidebar: Thumbnails */}
-            <div className="w-48 border-r border-border bg-secondary/20 overflow-y-auto p-4 space-y-4">
+            <div className="w-48 border-r border-border bg-secondary/20 overflow-y-auto p-4 space-y-4" data-testid="slides-sidebar">
                 {generation.slides.map((slide, idx) => (
                     <div 
                         key={slide.id}
                         onClick={() => setActiveSlideIndex(idx)}
+                        data-testid={`slide-thumbnail-${idx}`}
                         className={cn(
                             "aspect-square bg-black border-2 cursor-pointer relative group transition-all",
                             activeSlideIndex === idx ? "border-primary shadow-[0_0_15px_rgba(204,255,0,0.3)]" : "border-border hover:border-primary/50"
