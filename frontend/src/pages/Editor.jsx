@@ -108,6 +108,25 @@ const Editor = () => {
     }
   };
 
+  const handleGenerateViralVisuals = async () => {
+    setGeneratingImage(true);
+    try {
+      // Generate viral visuals for all slides
+      const updatedSlides = await Promise.all(
+        generation.slides.map(async (slide) => {
+          const result = await generateImage(id, slide.id);
+          return { ...slide, background_url: result.url };
+        })
+      );
+      setGeneration({ ...generation, slides: updatedSlides });
+      toast.success("Viral visuals generated for all slides");
+    } catch (e) {
+      toast.error("Failed to generate viral visuals");
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
+
   const downloadSlide = async () => {
     const node = document.getElementById(`slide-${activeSlideIndex}`);
     if (!node) return;
