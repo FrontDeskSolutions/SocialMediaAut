@@ -1,4 +1,55 @@
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Stylized Black Theme (Always Dark) */
+    --background: 0 0% 2%; /* #050505 */
+    --foreground: 0 0% 100%; /* #ffffff */
+    
+    --card: 0 0% 4%; /* #0a0a0a */
+    --card-foreground: 0 0% 100%;
+    
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 100%;
+    
+    --primary: 72 100% 50%; /* Electric Lime #ccff00 */
+    --primary-foreground: 0 0% 0%;
+    
+    --secondary: 0 0% 10%; /* #1a1a1a */
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 60%;
+    
+    --accent: 0 0% 10%;
+    --accent-foreground: 72 100% 50%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 0 0% 15%; /* #262626 */
+    --input: 0 0% 15%;
+    --ring: 72 100% 50%;
+    
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-body;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
 /* Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;900&family=Manrope:wght@400;500&family=JetBrains+Mono&family=Playfair+Display:wght@700&display=swap');
 /* New Fonts */
@@ -10,12 +61,11 @@
 .font-serif { font-family: 'Playfair Display', serif; }
 .font-black { font-family: 'Outfit', sans-serif; font-weight: 900; }
 
-/* New Font Classes */
 .font-handwritten { font-family: 'Permanent Marker', cursive; }
 .font-futuristic { font-family: 'Orbitron', sans-serif; }
 .font-editorial { font-family: 'Lora', serif; font-style: italic; }
 
-/* Effects ... (standard) */
+/* Effects */
 .effect-glow { text-shadow: 0 0 30px var(--theme-headline); }
 .animate-spin { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

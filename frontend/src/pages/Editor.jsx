@@ -19,6 +19,20 @@ import {
 } from 'lucide-react';
 import '@/styles/effects.css';
 
+// ... themeOptions ...
+const themeOptions = [
+  { id: "trust_clarity", name: "Trust & Clarity", color: "#0F172A" },
+  { id: "modern_luxury", name: "Modern Luxury", color: "#1C1C1C" },
+  { id: "swiss_minimalist", name: "Swiss Minimalist", color: "#000000" },
+  { id: "forest_executive", name: "Forest Executive", color: "#064E3B" },
+  { id: "warm_editorial", name: "Warm Editorial", color: "#4A3B32" },
+  { id: "dark_mode_premium", name: "Dark Mode Premium", color: "#18181B" },
+  { id: "slate_clay", name: "Slate & Clay", color: "#334155" },
+  { id: "royal_academic", name: "Royal Academic", color: "#2E1065" },
+  { id: "industrial_chic", name: "Industrial Chic", color: "#262626" },
+  { id: "sunset_corporate", name: "Sunset Corporate", color: "#7C2D12" },
+];
+
 const Editor = () => {
   const { id } = useParams();
   const [generation, setGeneration] = useState(null);
@@ -26,12 +40,35 @@ const Editor = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
+  const [polling, setPolling] = useState(false); // New state for polling visuals
 
   const activeSlide = generation?.slides?.[activeSlideIndex];
 
   useEffect(() => {
     loadGeneration();
   }, [id]);
+
+  // Polling Effect
+  useEffect(() => {
+    let interval;
+    if (polling) {
+        interval = setInterval(async () => {
+            try {
+                const data = await getGeneration(id);
+                // Check if hero slide has background url
+                if (data.slides && data.slides.length > 0 && data.slides[0].background_url) {
+                    setGeneration(data);
+                    setPolling(false);
+                    setGeneratingImage(false);
+                    toast.success("Viral Visuals Generated!");
+                }
+            } catch (e) {
+                console.error("Polling error", e);
+            }
+        }, 3000); // Poll every 3 seconds
+    }
+    return () => clearInterval(interval);
+  }, [polling, id]);
 
   const loadGeneration = async () => {
     try {
@@ -52,11 +89,17 @@ const Editor = () => {
     if (!generation || !activeSlide) return;
     
     let updatedSlides = [...generation.slides];
-    updatedSlides[activeSlideIndex] = { ...activeSlide, [field]: value };
+    
+    if (field === 'theme') {
+        updatedSlides = updatedSlides.map(slide => ({ ...slide, theme: value }));
+        toast.info("Theme updated for all slides");
+    } else {
+        updatedSlides[activeSlideIndex] = { ...activeSlide, [field]: value };
+    }
+
     setGeneration({ ...generation, slides: updatedSlides });
   };
 
-  // ... (Save, Generate, Download handlers same as before) ...
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -108,14 +151,20 @@ const Editor = () => {
             method: 'POST',
         });
         if (res.ok) {
-            toast.success("Generating Assets... (Check back in 1 min)");
-            setTimeout(loadGeneration, 15000);
+            toast.success("Generating Assets... (This may take a minute)");
+            setPolling(true);
+            
+            // Safety timeout to stop polling after 2 mins
+            setTimeout(() => {
+                setPolling(false);
+                setGeneratingImage(false);
+            }, 120000);
         } else {
             toast.error("Failed to trigger");
+            setGeneratingImage(false);
         }
     } catch (e) {
         toast.error("Error connecting to server");
-    } finally {
         setGeneratingImage(false);
     }
   };
@@ -127,14 +176,15 @@ const Editor = () => {
         content: "Add content...",
         background_prompt: "Abstract",
         type: "body",
-        layout: "centered_stack",
-        theme_mode: "dark",
+        layout: "default",
+        theme: activeSlide?.theme || 'trust_clarity',
         text_bg_enabled: true
     };
     const slidesWithoutCTA = generation.slides.filter(s => s.type !== 'cta');
     const ctaSlide = generation.slides.find(s => s.type === 'cta');
     const newSlides = [...slidesWithoutCTA, newSlide];
     if (ctaSlide) newSlides.push(ctaSlide);
+    
     setGeneration({ ...generation, slides: newSlides });
     setActiveSlideIndex(newSlides.length - (ctaSlide ? 2 : 1));
   };
@@ -159,8 +209,8 @@ const Editor = () => {
                 <h1 className="text-xl font-bold truncate w-64">{generation.topic}</h1>
             </div>
             <div className="flex items-center gap-2">
-                <Button onClick={handleSave} disabled={saving} variant="outline">{saving ? <Loader2 className="animate-spin" /> : <Save className="mr-2" />} Save</Button>
-                <Button onClick={downloadSlide} className="bg-primary text-black"><Download className="mr-2" /> Export PNG</Button>
+                <Button onClick={handleSave} disabled={saving} variant="outline" className="bg-secondary text-white border-border hover:bg-secondary/80">{saving ? <Loader2 className="animate-spin" /> : <Save className="mr-2" />} Save</Button>
+                <Button onClick={downloadSlide} className="bg-primary text-black hover:bg-primary/80"><Download className="mr-2" /> Export PNG</Button>
             </div>
         </div>
 
@@ -191,9 +241,10 @@ const Editor = () => {
                 {generation.mode === 'viral' && !generation.slides[0].background_url && (
                     <div className="p-4 bg-purple-900/20 border-b border-purple-500/30">
                         <h3 className="text-xs font-bold text-purple-400 mb-2 flex items-center gap-2"><Zap size={12} /> AI CONTROL ROOM</h3>
-                        <Button onClick={handleGenerateViralVisuals} disabled={generatingImage} className="w-full bg-gradient-to-r from-purple-600 to-pink-600 h-8 text-xs">
+                        <Button onClick={handleGenerateViralVisuals} disabled={generatingImage} className="w-full bg-gradient-to-r from-purple-600 to-pink-600 h-8 text-xs hover:from-purple-700">
                             {generatingImage ? <Loader2 className="animate-spin mr-2 h-3" /> : <Sparkles className="mr-2 h-3" />} GENERATE VISUALS
                         </Button>
+                        {generatingImage && <p className="text-[10px] text-purple-300 mt-2 animate-pulse">Generating Assets... Please wait.</p>}
                     </div>
                 )}
 
@@ -204,6 +255,7 @@ const Editor = () => {
                     </TabsList>
                     
                     <div className="p-6 space-y-6">
+                        {/* Content Tab */}
                         <TabsContent value="content" className="space-y-6 mt-0">
                             <div className="space-y-2">
                                 <label className="text-xs font-mono text-muted-foreground">HEADLINE</label>
@@ -235,6 +287,7 @@ const Editor = () => {
                             </div>
                         </TabsContent>
 
+                        {/* Design Tab */}
                         <TabsContent value="design" className="space-y-6 mt-0">
                             
                             <div className="space-y-2">
@@ -292,6 +345,33 @@ const Editor = () => {
                                         <SelectItem value="editorial">Editorial</SelectItem>
                                     </SelectContent>
                                 </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Move size={12} /> POSITION</label>
+                                <Select value={activeSlide.text_position || 'middle_center'} onValueChange={v => handleUpdateSlide('text_position', v)}>
+                                    <SelectTrigger className="bg-secondary border-transparent"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="top_left">Top Left</SelectItem>
+                                        <SelectItem value="top_center">Top Center</SelectItem>
+                                        <SelectItem value="top_right">Top Right</SelectItem>
+                                        <SelectItem value="middle_left">Middle Left</SelectItem>
+                                        <SelectItem value="middle_center">Middle Center</SelectItem>
+                                        <SelectItem value="middle_right">Middle Right</SelectItem>
+                                        <SelectItem value="bottom_left">Bottom Left</SelectItem>
+                                        <SelectItem value="bottom_center">Bottom Center</SelectItem>
+                                        <SelectItem value="bottom_right">Bottom Right</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><AlignLeft size={12} /> ALIGNMENT</label>
+                                <div className="flex gap-2">
+                                    <Button variant={activeSlide.text_align === 'left' ? 'default' : 'outline'} onClick={() => handleUpdateSlide('text_align', 'left')} className="flex-1 h-8"><AlignLeft size={14} /></Button>
+                                    <Button variant={activeSlide.text_align === 'center' ? 'default' : 'outline'} onClick={() => handleUpdateSlide('text_align', 'center')} className="flex-1 h-8"><AlignCenter size={14} /></Button>
+                                    <Button variant={activeSlide.text_align === 'right' ? 'default' : 'outline'} onClick={() => handleUpdateSlide('text_align', 'right')} className="flex-1 h-8"><AlignRight size={14} /></Button>
+                                </div>
                             </div>
                         </TabsContent>
                     </div>
