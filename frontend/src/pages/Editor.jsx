@@ -88,6 +88,18 @@ const Editor = () => {
 
   if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!generation) return <div>Not found</div>;
+  
+  // Handle case where generation has no slides (failed generation)
+  if (!generation.slides || generation.slides.length === 0) {
+    return (
+      <div className="h-screen flex items-center justify-center flex-col space-y-4">
+        <h2 className="text-2xl font-bold text-white">No Slides Available</h2>
+        <p className="text-muted-foreground">This generation failed or has no slides yet.</p>
+        <p className="text-sm text-muted-foreground">Status: {generation.status}</p>
+        <Link to="/"><Button>Back to Dashboard</Button></Link>
+      </div>
+    );
+  }
 
   const activeSlide = generation.slides[activeSlideIndex];
 
