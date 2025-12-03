@@ -5,12 +5,14 @@ import { getGenerations, triggerGeneration } from '../services/api';
 import { Plus, Loader2, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 
 const Dashboard = () => {
   const [generations, setGenerations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newTopic, setNewTopic] = useState('');
+  const [slideCount, setSlideCount] = useState(5);
   const [creating, setCreating] = useState(false);
 
   const load = async () => {
@@ -26,7 +28,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     load();
-    const interval = setInterval(load, 5000); // Poll for updates
+    const interval = setInterval(load, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -35,7 +37,8 @@ const Dashboard = () => {
     if (!newTopic) return;
     setCreating(true);
     try {
-      await triggerGeneration(newTopic);
+      // Pass slide_count to API
+      await triggerGeneration(newTopic, slideCount);
       toast.success("Generation started");
       setNewTopic('');
       load();
@@ -48,21 +51,43 @@ const Dashboard = () => {
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8" data-testid="dashboard-container">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <h1 className="text-4xl font-bold text-white font-heading" data-testid="dashboard-title">CONTROL ROOM</h1>
-        <form onSubmit={handleCreate} className="flex gap-4">
-            <input 
-                value={newTopic}
-                onChange={e => setNewTopic(e.target.value)}
-                placeholder="Enter topic..."
-                className="bg-secondary border border-border p-2 text-white w-64 focus:outline-none focus:border-primary"
-                data-testid="new-topic-input"
-            />
-            <Button type="submit" disabled={creating} className="bg-primary text-black hover:bg-primary/80" data-testid="new-project-button">
-                {creating ? <Loader2 className="animate-spin" /> : <Plus />}
-                NEW PROJECT
-            </Button>
-        </form>
+        
+        <div className="bg-card border border-border p-4 rounded-sm w-full md:w-auto">
+            <form onSubmit={handleCreate} className="flex flex-col md:flex-row gap-4 items-end">
+                <div className="space-y-2">
+                    <label className="text-xs font-mono text-muted-foreground">TOPIC</label>
+                    <input 
+                        value={newTopic}
+                        onChange={e => setNewTopic(e.target.value)}
+                        placeholder="Enter topic..."
+                        className="bg-secondary border border-border p-2 text-white w-64 focus:outline-none focus:border-primary h-10"
+                        data-testid="new-topic-input"
+                    />
+                </div>
+                
+                <div className="space-y-2 w-32">
+                    <label className="text-xs font-mono text-muted-foreground flex justify-between">
+                        <span>SLIDES</span>
+                        <span className="text-primary">{slideCount}</span>
+                    </label>
+                    <Slider 
+                        value={[slideCount]} 
+                        onValueChange={v => setSlideCount(v[0])}
+                        min={1} 
+                        max={10} 
+                        step={1}
+                        className="py-2"
+                    />
+                </div>
+
+                <Button type="submit" disabled={creating} className="bg-primary text-black hover:bg-primary/80 h-10" data-testid="new-project-button">
+                    {creating ? <Loader2 className="animate-spin" /> : <Plus />}
+                    NEW PROJECT
+                </Button>
+            </form>
+        </div>
       </div>
 
       {loading ? (
