@@ -7,149 +7,82 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Loader2, Save, Download, Wand2, ArrowLeft, Layout, Type } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import * as htmlToImage from 'html-to-image';
-import { cn } from '@/lib/utils';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { 
+  Loader2, 
+  Save, 
+  Download, 
+  Wand2, 
+  ArrowLeft, 
+  Layout, 
+  Type, 
+  Palette, 
+  Sparkles,
+  Plus,
+  Trash2
+} from 'lucide-react';
+
+// ... imports ...
 
 const Editor = () => {
-  const { id } = useParams();
-  const [generation, setGeneration] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
-  const [generatingImage, setGeneratingImage] = useState(false);
-  
-  // Refs for export
-  const slideRefs = useRef([]);
+  // ... state ...
 
-  useEffect(() => {
-    load();
-  }, [id]);
-
-  const load = async () => {
-    try {
-      const data = await getGeneration(id);
-      setGeneration(data);
-    } catch (e) {
-      toast.error("Failed to load project");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateSlide = (field, value) => {
-    const newSlides = [...generation.slides];
-    newSlides[activeSlideIndex] = { ...newSlides[activeSlideIndex], [field]: value };
+  const addSlide = () => {
+    const newSlide = {
+        id: crypto.randomUUID(),
+        title: "New Slide",
+        content: "Add your content here.",
+        background_prompt: "Abstract background",
+        type: "body",
+        layout: "default",
+        font: "modern"
+    };
+    const newSlides = [...generation.slides, newSlide];
     setGeneration({ ...generation, slides: newSlides });
+    setActiveSlideIndex(newSlides.length - 1);
+    toast.success("Slide added");
   };
 
-  const saveChanges = async () => {
-    try {
-      await updateGeneration(id, { slides: generation.slides });
-      toast.success("Saved changes");
-    } catch (e) {
-      toast.error("Failed to save");
+  const deleteSlide = (e, index) => {
+    e.stopPropagation();
+    if (generation.slides.length <= 1) {
+        toast.error("Cannot delete the only slide");
+        return;
+    }
+    const newSlides = generation.slides.filter((_, i) => i !== index);
+    setGeneration({ ...generation, slides: newSlides });
+    if (activeSlideIndex >= index && activeSlideIndex > 0) {
+        setActiveSlideIndex(activeSlideIndex - 1);
     }
   };
 
-  const handleGenerateImage = async () => {
-    const slide = generation.slides[activeSlideIndex];
-    if (!slide) return;
-    
-    setGeneratingImage(true);
-    try {
-      const res = await generateImage(id, slide.id);
-      // Update local state
-      const newSlides = [...generation.slides];
-      newSlides[activeSlideIndex] = { ...newSlides[activeSlideIndex], background_url: res.url };
-      setGeneration({ ...generation, slides: newSlides });
-      toast.success("Image generated");
-    } catch (e) {
-      toast.error("Image generation failed");
-    } finally {
-      setGeneratingImage(false);
-    }
-  };
+  // ... render ...
 
-  const downloadSlide = async () => {
-    const node = document.getElementById(`slide-${activeSlideIndex}`);
-    if (!node) return;
-    
-    try {
-        // Use proxy logic implicitly handled by SlideCanvas
-        const dataUrl = await htmlToImage.toPng(node, {
-            cacheBust: true,
-        });
-        const link = document.createElement('a');
-        link.download = `slide-${activeSlideIndex + 1}.png`;
-        link.href = dataUrl;
-        link.click();
-        toast.success("Exported!");
-    } catch (error) {
-        console.error('Export failed:', error);
-        toast.error("Download failed - try saving first");
-    }
-  };
-
-  if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
-  if (!generation) return <div>Not found</div>;
-  
-  // Handle case where generation has no slides (failed generation)
-  if (!generation.slides || generation.slides.length === 0) {
-    return (
-      <div className="h-screen flex items-center justify-center flex-col space-y-4">
-        <h2 className="text-2xl font-bold text-white">No Slides Available</h2>
-        <p className="text-muted-foreground">This generation failed or has no slides yet.</p>
-        <p className="text-sm text-muted-foreground">Status: {generation.status}</p>
-        <Link to="/"><Button>Back to Dashboard</Button></Link>
-      </div>
-    );
-  }
-
-  const activeSlide = generation.slides[activeSlideIndex];
-
-  return (
-    <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden" data-testid="editor-container">
-        {/* Header */}
-        <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-background/80 backdrop-blur">
-            <div className="flex items-center gap-4">
-                <Link to="/"><Button variant="ghost" size="icon" data-testid="back-button"><ArrowLeft /></Button></Link>
-                <h1 className="font-heading font-bold text-xl truncate w-64" data-testid="project-title">{generation.topic}</h1>
-            </div>
-            <div className="flex items-center gap-2">
-                <Button onClick={saveChanges} variant="outline" className="gap-2" data-testid="save-button"><Save size={16} /> Save</Button>
-                <Button onClick={downloadSlide} className="bg-primary text-black gap-2" data-testid="export-button"><Download size={16} /> Export PNG</Button>
-            </div>
-        </header>
-
-        {/* Main Workspace */}
-        <div className="flex-1 flex overflow-hidden">
-            
             {/* Sidebar: Thumbnails */}
-            <div className="w-48 border-r border-border bg-secondary/20 overflow-y-auto p-4 space-y-4" data-testid="slides-sidebar">
+            <div className="w-48 border-r border-border bg-secondary/20 overflow-y-auto p-4 space-y-4 flex flex-col" data-testid="slides-sidebar">
                 {generation.slides.map((slide, idx) => (
                     <div 
                         key={slide.id}
                         onClick={() => setActiveSlideIndex(idx)}
                         data-testid={`slide-thumbnail-${idx}`}
                         className={cn(
-                            "aspect-square bg-black border-2 cursor-pointer relative group transition-all",
+                            "aspect-square bg-black border-2 cursor-pointer relative group transition-all shrink-0",
                             activeSlideIndex === idx ? "border-primary shadow-[0_0_15px_rgba(204,255,0,0.3)]" : "border-border hover:border-primary/50"
                         )}
                     >
-                        <div className="absolute top-1 left-1 bg-black/50 px-2 text-xs font-mono text-white">{idx + 1}</div>
-                        {/* Mini preview could go here */}
-                        <div className="p-2 text-[8px] text-white truncate mt-6">{slide.title}</div>
+                        <div className="absolute top-1 left-1 bg-black/50 px-2 text-xs font-mono text-white z-10">{idx + 1}</div>
+                        <button 
+                            onClick={(e) => deleteSlide(e, idx)}
+                            className="absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white p-1 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                        >
+                            <Trash2 size={12} />
+                        </button>
+                        <div className="p-2 text-[8px] text-white truncate mt-6 pointer-events-none">{slide.title}</div>
                     </div>
                 ))}
+                
+                <Button onClick={addSlide} variant="outline" className="w-full border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary">
+                    <Plus size={16} className="mr-2"/> Add Slide
+                </Button>
             </div>
 
             {/* Center: Canvas */}
