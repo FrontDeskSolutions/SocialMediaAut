@@ -1,8 +1,8 @@
 
 from fastapi import APIRouter, HTTPException, Depends
-from app.models import Generation, Slide
-from app.server import db
-from app.services.openai_service import OpenAIService
+from models import Generation, Slide
+from database import db
+from services.openai_service import OpenAIService
 from typing import List
 from datetime import datetime, timezone
 

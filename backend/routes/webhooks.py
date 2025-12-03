@@ -1,8 +1,8 @@
 
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from app.models import WebhookPayload, Generation, Slide
-from app.services.openai_service import OpenAIService
-from app.server import db
+from models import WebhookPayload, Generation, Slide
+from services.openai_service import OpenAIService
+from database import db
 from datetime import datetime, timezone
 import uuid
 import logging
@@ -30,9 +30,6 @@ async def process_generation(generation_id: str, topic: str, context: str):
             {"id": generation_id},
             {"$set": {"status": "draft", "slides": slides, "updated_at": datetime.now(timezone.utc)}}
         )
-        
-        # We don't auto-generate images to save cost/time, user triggers them in editor. 
-        # Or we could. Let's leave it as "draft" so user can review text first.
         
     except Exception as e:
         logger.error(f"Processing failed for {generation_id}: {e}")

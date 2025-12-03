@@ -1,6 +1,6 @@
 
 from openai import AsyncOpenAI
-from app.config import get_settings
+from config import get_settings
 import json
 import logging
 
