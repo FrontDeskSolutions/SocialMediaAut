@@ -41,7 +41,7 @@
 }
 
 /* Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;700&family=Manrope:wght@400;500&family=JetBrains+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;900&family=Manrope:wght@400;500&family=JetBrains+Mono&family=Playfair+Display:wght@700&display=swap');
 
 .font-heading {
   font-family: 'Outfit', sans-serif;
@@ -51,6 +51,13 @@
 }
 .font-mono {
   font-family: 'JetBrains Mono', monospace;
+}
+.font-serif {
+  font-family: 'Playfair Display', serif;
+}
+.font-black {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
 }
 
 .animate-spin {

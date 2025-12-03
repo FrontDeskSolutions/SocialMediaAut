@@ -10,11 +10,12 @@ class Slide(BaseModel):
     content: str
     background_prompt: str
     background_url: Optional[str] = None
-    layout: str = "default"  # title, content, split
+    layout: str = "default"  # default, center, split_left, split_right, minimalist
+    font: str = "modern"     # modern, serif, mono, bold
 
 class GenerationBase(BaseModel):
     topic: str
-    status: str = "pending" # pending, processing, completed, failed
+    status: str = "pending"
 
 class GenerationCreate(GenerationBase):
     pass

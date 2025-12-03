@@ -7,9 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Loader2, Save, Download, Wand2, ArrowLeft } from 'lucide-react';
+import { Loader2, Save, Download, Wand2, ArrowLeft, Layout, Type } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import * as htmlToImage from 'html-to-image';
+import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const Editor = () => {
   const { id } = useParams();
@@ -75,14 +84,18 @@ const Editor = () => {
     if (!node) return;
     
     try {
-        const dataUrl = await htmlToImage.toPng(node);
+        // Use proxy logic implicitly handled by SlideCanvas
+        const dataUrl = await htmlToImage.toPng(node, {
+            cacheBust: true,
+        });
         const link = document.createElement('a');
         link.download = `slide-${activeSlideIndex + 1}.png`;
         link.href = dataUrl;
         link.click();
+        toast.success("Exported!");
     } catch (error) {
-        console.error('oops, something went wrong!', error);
-        toast.error("Download failed");
+        console.error('Export failed:', error);
+        toast.error("Download failed - try saving first");
     }
   };
 
@@ -152,57 +165,107 @@ const Editor = () => {
             </div>
 
             {/* Right: Properties */}
-            <div className="w-80 border-l border-border bg-background p-6 overflow-y-auto space-y-6" data-testid="properties-panel">
-                <h3 className="font-heading font-bold text-lg text-primary">SLIDE PROPERTIES</h3>
+            <div className="w-80 border-l border-border bg-background p-0 overflow-y-auto" data-testid="properties-panel">
                 
-                <div className="space-y-2">
-                    <label className="text-xs font-mono text-muted-foreground">HEADLINE</label>
-                    <Textarea 
-                        value={activeSlide.title} 
-                        onChange={e => handleUpdateSlide('title', e.target.value)}
-                        className="font-heading font-bold text-lg bg-secondary border-transparent focus:border-primary"
-                        rows={3}
-                        data-testid="input-headline"
-                    />
-                </div>
+                <Tabs defaultValue="content" className="w-full">
+                    <TabsList className="w-full grid grid-cols-2 rounded-none bg-secondary/50 p-0 h-12">
+                        <TabsTrigger value="content" className="data-[state=active]:bg-background rounded-none h-full border-b-2 data-[state=active]:border-primary border-transparent">CONTENT</TabsTrigger>
+                        <TabsTrigger value="design" className="data-[state=active]:bg-background rounded-none h-full border-b-2 data-[state=active]:border-primary border-transparent">DESIGN</TabsTrigger>
+                    </TabsList>
+                    
+                    <div className="p-6 space-y-6">
+                        <TabsContent value="content" className="space-y-6 mt-0">
+                            <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground">HEADLINE</label>
+                                <Textarea 
+                                    value={activeSlide.title} 
+                                    onChange={e => handleUpdateSlide('title', e.target.value)}
+                                    className="font-heading font-bold text-lg bg-secondary border-transparent focus:border-primary"
+                                    rows={3}
+                                    data-testid="input-headline"
+                                />
+                            </div>
 
-                <div className="space-y-2">
-                    <label className="text-xs font-mono text-muted-foreground">BODY CONTENT</label>
-                    <Textarea 
-                        value={activeSlide.content} 
-                        onChange={e => handleUpdateSlide('content', e.target.value)}
-                        className="font-body text-sm bg-secondary border-transparent focus:border-primary"
-                        rows={6}
-                        data-testid="input-content"
-                    />
-                </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground">BODY CONTENT</label>
+                                <Textarea 
+                                    value={activeSlide.content} 
+                                    onChange={e => handleUpdateSlide('content', e.target.value)}
+                                    className="font-body text-sm bg-secondary border-transparent focus:border-primary"
+                                    rows={6}
+                                    data-testid="input-content"
+                                />
+                            </div>
 
-                <div className="h-px bg-border my-4" />
+                             <div className="h-px bg-border my-4" />
 
-                <div className="space-y-2">
-                    <label className="text-xs font-mono text-muted-foreground">BACKGROUND PROMPT</label>
-                    <Textarea 
-                        value={activeSlide.background_prompt} 
-                        onChange={e => handleUpdateSlide('background_prompt', e.target.value)}
-                        className="text-xs bg-secondary border-transparent focus:border-primary font-mono"
-                        rows={4}
-                        data-testid="input-prompt"
-                    />
-                    <Button 
-                        onClick={handleGenerateImage} 
-                        disabled={generatingImage}
-                        className="w-full mt-2 bg-secondary hover:bg-secondary/80 border border-border"
-                        data-testid="generate-art-button"
-                    >
-                        {generatingImage ? <Loader2 className="animate-spin mr-2" /> : <Wand2 className="mr-2" />}
-                        GENERATE ART
-                    </Button>
-                </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground">BACKGROUND PROMPT</label>
+                                <Textarea 
+                                    value={activeSlide.background_prompt} 
+                                    onChange={e => handleUpdateSlide('background_prompt', e.target.value)}
+                                    className="text-xs bg-secondary border-transparent focus:border-primary font-mono"
+                                    rows={4}
+                                    data-testid="input-prompt"
+                                />
+                                <Button 
+                                    onClick={handleGenerateImage} 
+                                    disabled={generatingImage}
+                                    className="w-full mt-2 bg-secondary hover:bg-secondary/80 border border-border"
+                                    data-testid="generate-art-button"
+                                >
+                                    {generatingImage ? <Loader2 className="animate-spin mr-2" /> : <Wand2 className="mr-2" />}
+                                    GENERATE ART
+                                </Button>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="design" className="space-y-6 mt-0">
+                             <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2">
+                                    <Layout size={12} /> LAYOUT STYLE
+                                </label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {['default', 'center', 'split_left', 'split_right', 'minimalist'].map(l => (
+                                        <Button 
+                                            key={l}
+                                            variant={activeSlide.layout === l ? 'default' : 'outline'}
+                                            onClick={() => handleUpdateSlide('layout', l)}
+                                            className="text-xs uppercase justify-start h-10"
+                                        >
+                                            {l.replace('_', ' ')}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2">
+                                    <Type size={12} /> TYPOGRAPHY
+                                </label>
+                                <Select 
+                                    value={activeSlide.font || 'modern'} 
+                                    onValueChange={v => handleUpdateSlide('font', v)}
+                                >
+                                    <SelectTrigger className="bg-secondary border-transparent">
+                                        <SelectValue placeholder="Select Font" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="modern">Modern (Outfit)</SelectItem>
+                                        <SelectItem value="serif">Classic (Playfair)</SelectItem>
+                                        <SelectItem value="mono">Tech (Mono)</SelectItem>
+                                        <SelectItem value="bold">Impact (Heavy)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </TabsContent>
+                    </div>
+                </Tabs>
+
             </div>
         </div>
     </div>
   );
 };
 
-import { cn } from '@/lib/utils';
 export default Editor;
