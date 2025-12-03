@@ -34,9 +34,10 @@ async def health():
     return {"status": "ok"}
 
 # Include sub-routers
-from routes import webhooks, generations
+from routes import webhooks, generations, proxy
 api_router.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])
 api_router.include_router(generations.router, prefix="/generations", tags=["generations"])
+api_router.include_router(proxy.router, prefix="/proxy", tags=["proxy"])
 
 app.include_router(api_router)
 
