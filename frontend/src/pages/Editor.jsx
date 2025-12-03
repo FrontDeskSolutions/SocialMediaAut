@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getGeneration, updateGeneration, generateImage } from '../services/api';
+import { getGeneration, updateGeneration, generateImage, triggerViralVisuals } from '../services/api';
 import { SlideCanvas } from '@/components/SlideCanvas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
