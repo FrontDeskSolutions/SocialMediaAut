@@ -29,7 +29,6 @@ class OpenAIService:
             - 'title': Headline
             - 'content': Body text (max 40 words)
         """
-        
         try:
             response = await self.client.chat.completions.create(
                 model=self.model,
@@ -37,27 +36,20 @@ class OpenAIService:
                 response_format={"type": "json_object"}
             )
             return json.loads(response.choices[0].message.content)
-        except Exception as e:
-            logger.error(f"LLM Error: {e}")
+        except Exception:
             raise
 
     async def analyze_design_from_image(self, image_url: str) -> dict:
-        """
-        Uses GPT-4o Vision to analyze the background image and recommend design settings.
-        """
+        # Vision Analysis Logic
         system_prompt = """You are an expert UI/UX designer. 
-        Analyze this background image which will be used for a social media slide.
-        
-        Determine the best overlay settings to ensure text is readable and the composition is balanced.
-        
+        Analyze this background image.
         Return JSON:
         {
-            "font_color": "Hex color string that contrasts BEST with the background (e.g., #FFFFFF or #000000)",
-            "font": "One of: modern, serif, mono, bold, handwritten, futuristic, editorial",
-            "spacing": "One of: compact (if image has small border), normal, wide (if image has large border/clutter)"
+            "font_color": "Hex color that contrasts BEST (e.g. #FFFFFF)",
+            "font": "modern", 
+            "spacing": "normal"
         }
         """
-        
         try:
             response = await self.client.chat.completions.create(
                 model="gpt-4o", 
@@ -74,17 +66,22 @@ class OpenAIService:
                 max_tokens=300
             )
             return json.loads(response.choices[0].message.content)
-        except Exception as e:
-            logger.error(f"Vision Analysis Error: {e}")
-            # Fallback defaults
+        except Exception:
             return {"font_color": "#ffffff", "font": "modern", "spacing": "normal"}
 
     async def generate_slides_content(self, topic: str, count: int = 5, context: str = "") -> list[dict]:
-        # (Standard Flow - Unchanged)
         system_prompt = f"""You are a social media expert. Generate a {count}-slide carousel. 
         Return ONLY a JSON object with a 'slides' key containing an array of {count} objects.
+        Structure logic:
+        - Slide 1 MUST be type='hero'.
+        - Middle slides MUST be type='body'.
+        - Last slide MUST be type='cta'.
+        Each object must have:
+        - 'type': 'hero', 'body', or 'cta'.
+        - 'title': Short, punchy headline.
+        - 'content': The main text (max 40 words).
+        - 'background_prompt': A visual description for DALL-E 3.
         """
-        # ... (rest of standard logic preserved) ...
         user_prompt = f"Topic: {topic}\nSlide Count: {count}\nContext: {context}"
         try:
             response = await self.client.chat.completions.create(
@@ -100,7 +97,6 @@ class OpenAIService:
             raise
 
     async def generate_image(self, prompt: str) -> str:
-        # (Standard DALL-E Flow - Unchanged)
         try:
             response = await self.client.images.generate(
                 model=self.dalle_model,

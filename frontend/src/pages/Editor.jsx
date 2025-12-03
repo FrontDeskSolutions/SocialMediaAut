@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getGeneration, updateGeneration, generateImage, triggerViralVisuals } from '../services/api';
+import { getGeneration, updateGeneration, generateImage } from '../services/api';
 import { SlideCanvas } from '@/components/SlideCanvas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,10 +68,6 @@ const Editor = () => {
     if (field === 'theme') {
         updatedSlides = updatedSlides.map(slide => ({ ...slide, theme: value }));
         toast.info("Theme updated for all slides");
-    } else if (field === 'text_bg_enabled_global') {
-        // Special case for global text bg toggle if desired, or just per slide
-        updatedSlides = updatedSlides.map(slide => ({ ...slide, text_bg_enabled: value }));
-        toast.info("Text background updated for all slides");
     } else {
         updatedSlides[activeSlideIndex] = { ...activeSlide, [field]: value };
     }
@@ -108,20 +104,6 @@ const Editor = () => {
     }
   };
 
-  const handleGenerateViralVisuals = async () => {
-    setGeneratingImage(true);
-    try {
-      await triggerViralVisuals(id);
-      toast.success("Viral Asset Generation Started (Check back in 1 min)");
-      // Polling or reload logic would be better, but manual reload is fine for MVP
-      setTimeout(loadGeneration, 10000);
-    } catch (e) {
-      toast.error("Failed to trigger viral visuals");
-    } finally {
-      setGeneratingImage(false);
-    }
-  };
-
   const downloadSlide = async () => {
     const node = document.getElementById(`slide-${activeSlideIndex}`);
     if (!node) return;
@@ -137,9 +119,31 @@ const Editor = () => {
     }
   };
 
-  if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  const handleGenerateViralVisuals = async () => {
+    // Simplified trigger for Viral Visuals
+    setGeneratingImage(true);
+    try {
+        // Call the endpoint that triggers background processing for ALL slides
+        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/generations/${id}/generate-viral-visuals`, {
+            method: 'POST',
+        });
+        if (res.ok) {
+            toast.success("Generating Assets... (Check back in 1 min)");
+            setTimeout(loadGeneration, 15000); // Auto reload
+        } else {
+            toast.error("Failed to trigger");
+        }
+    } catch (e) {
+        toast.error("Error connecting to server");
+    } finally {
+        setGeneratingImage(false);
+    }
+  };
+
+  if (loading) return <div className="h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary" /></div>;
   if (!generation) return <div>Not Found</div>;
 
+  // ... addSlide/deleteSlide ...
   const addSlide = () => {
     const newSlide = {
         id: crypto.randomUUID(),
@@ -148,8 +152,7 @@ const Editor = () => {
         background_prompt: "Abstract",
         type: "body",
         layout: "default",
-        theme: activeSlide?.theme || 'trust_clarity',
-        text_bg_enabled: true
+        theme: activeSlide?.theme || 'trust_clarity'
     };
     const newSlides = [...generation.slides, newSlide];
     setGeneration({ ...generation, slides: newSlides });
@@ -166,7 +169,6 @@ const Editor = () => {
 
   return (
     <div className="h-screen bg-background text-white flex flex-col">
-        {/* Header */}
         <div className="border-b border-border bg-card px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
                 <Link to="/"><Button variant="ghost" size="sm"><ArrowLeft className="mr-2" /> Back</Button></Link>
@@ -179,7 +181,6 @@ const Editor = () => {
         </div>
 
         <div className="flex-1 flex overflow-hidden">
-            {/* Sidebar */}
             <div className="w-48 border-r border-border bg-secondary/20 overflow-y-auto p-4 space-y-4 flex flex-col">
                 {generation.slides.map((slide, idx) => (
                     <div key={slide.id} onClick={() => setActiveSlideIndex(idx)} className={cn("aspect-square bg-black border-2 cursor-pointer relative group", activeSlideIndex === idx ? "border-primary" : "border-border")}>
@@ -191,7 +192,6 @@ const Editor = () => {
                 <Button onClick={addSlide} variant="outline"><Plus className="mr-2" /> Add Slide</Button>
             </div>
 
-            {/* Canvas */}
             <div className="flex-1 bg-[#0a0a0a] flex items-center justify-center p-12 overflow-hidden relative">
                 <div className="absolute inset-0 opacity-10 pointer-events-none" style={{backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '40px 40px'}} />
                 <div className="transform scale-[0.55] shadow-2xl border border-white/10">
@@ -199,25 +199,13 @@ const Editor = () => {
                 </div>
             </div>
 
-            {/* Properties */}
-            <div className="w-80 border-l border-border bg-background p-0 overflow-y-auto" data-testid="properties-panel">
+            <div className="w-80 border-l border-border bg-background p-0 overflow-y-auto">
                 
-                {/* Viral Mode Actions */}
                 {generation.mode === 'viral' && !generation.slides[0].background_url && (
                     <div className="p-4 bg-purple-900/20 border-b border-purple-500/30">
-                        <h3 className="text-xs font-bold text-purple-400 mb-2 uppercase flex items-center gap-2">
-                            <Zap size={12} /> AI Control Room
-                        </h3>
-                        <p className="text-[10px] text-muted-foreground mb-3">
-                            Text structure is ready. Review the content below, then generate the Viral Hero & Clean Backgrounds.
-                        </p>
-                        <Button 
-                            onClick={handleGenerateViralVisuals} 
-                            disabled={generatingImage}
-                            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 text-white h-8 text-xs"
-                        >
-                            {generatingImage ? <Loader2 className="animate-spin mr-2 h-3 w-3" /> : <Sparkles className="mr-2 h-3 w-3" />}
-                            GENERATE VIRAL VISUALS
+                        <h3 className="text-xs font-bold text-purple-400 mb-2 flex items-center gap-2"><Zap size={12} /> AI CONTROL ROOM</h3>
+                        <Button onClick={handleGenerateViralVisuals} disabled={generatingImage} className="w-full bg-gradient-to-r from-purple-600 to-pink-600 h-8 text-xs">
+                            {generatingImage ? <Loader2 className="animate-spin mr-2 h-3" /> : <Sparkles className="mr-2 h-3" />} GENERATE VISUALS
                         </Button>
                     </div>
                 )}
@@ -249,16 +237,11 @@ const Editor = () => {
                              <div className="space-y-2">
                                 <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Palette size={12} /> GLOBAL THEME</label>
                                 <Select value={activeSlide.theme || 'trust_clarity'} onValueChange={v => handleUpdateSlide('theme', v)}>
-                                    <SelectTrigger className="bg-secondary border-transparent">
-                                        <SelectValue placeholder="Select Theme" />
-                                    </SelectTrigger>
+                                    <SelectTrigger className="bg-secondary border-transparent"><SelectValue /></SelectTrigger>
                                     <SelectContent className="max-h-64">
                                         {themeOptions.map(t => (
                                             <SelectItem key={t.id} value={t.id}>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-3 h-3 rounded-full" style={{backgroundColor: t.color}} />
-                                                    {t.name}
-                                                </div>
+                                                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{backgroundColor: t.color}} />{t.name}</div>
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -268,12 +251,8 @@ const Editor = () => {
                             <div className="space-y-2">
                                 <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Frame size={12} /> TEXT CONTAINER</label>
                                 <div className="flex items-center space-x-2 border border-border p-2 rounded-md bg-secondary/20">
-                                    <Switch 
-                                        id="text-bg" 
-                                        checked={activeSlide.text_bg_enabled !== false}
-                                        onCheckedChange={(v) => handleUpdateSlide('text_bg_enabled', v)}
-                                    />
-                                    <Label htmlFor="text-bg" className="text-xs cursor-pointer">Enable Text Background</Label>
+                                    <Switch id="text-bg" checked={activeSlide.text_bg_enabled !== false} onCheckedChange={(v) => handleUpdateSlide('text_bg_enabled', v)} />
+                                    <Label htmlFor="text-bg" className="text-xs">Enable Background</Label>
                                 </div>
                             </div>
 
@@ -290,18 +269,6 @@ const Editor = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Layout size={12} /> LAYOUT</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {(activeSlide.type === 'hero' 
-                                        ? ['default', 'hero_center', 'hero_left', 'hero_right'] 
-                                        : ['default', 'center', 'split_left', 'split_right', 'minimalist']
-                                    ).map(l => (
-                                        <Button key={l} variant={activeSlide.layout === l ? 'default' : 'outline'} onClick={() => handleUpdateSlide('layout', l)} className="text-[10px] uppercase h-8">{l.replace('_', ' ')}</Button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
                                 <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Type size={12} /> TYPOGRAPHY</label>
                                 <Select value={activeSlide.font || 'modern'} onValueChange={v => handleUpdateSlide('font', v)}>
                                     <SelectTrigger className="bg-secondary border-transparent"><SelectValue /></SelectTrigger>
@@ -310,6 +277,9 @@ const Editor = () => {
                                         <SelectItem value="serif">Classic</SelectItem>
                                         <SelectItem value="mono">Tech</SelectItem>
                                         <SelectItem value="bold">Impact</SelectItem>
+                                        <SelectItem value="handwritten">Handwritten</SelectItem>
+                                        <SelectItem value="futuristic">Futuristic</SelectItem>
+                                        <SelectItem value="editorial">Editorial</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -328,16 +298,6 @@ const Editor = () => {
                                     </SelectContent>
                                 </Select>
                             </div>
-
-                            {activeSlide.type !== 'cta' && (
-                                <div className="space-y-2">
-                                    <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Pipette size={12} /> ARROW COLOR</label>
-                                    <div className="flex gap-2 items-center">
-                                        <div className="w-8 h-8 rounded-full border border-border" style={{backgroundColor: activeSlide.arrow_color || '#ffffff'}} />
-                                        <input type="color" value={activeSlide.arrow_color || '#ffffff'} onChange={(e) => handleUpdateSlide('arrow_color', e.target.value)} className="flex-1 h-8 bg-secondary border border-border cursor-pointer" />
-                                    </div>
-                                </div>
-                            )}
                         </TabsContent>
                     </div>
                 </Tabs>

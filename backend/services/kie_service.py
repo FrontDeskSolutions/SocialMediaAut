@@ -18,7 +18,6 @@ class KieService:
         }
 
     async def create_task(self, model: str, input_data: dict) -> str:
-        """Creates a task and returns the taskId"""
         url = f"{self.base_url}/api/v1/jobs/createTask"
         payload = {
             "model": model,
@@ -36,14 +35,13 @@ class KieService:
 
     @retry(stop=stop_after_attempt(30), wait=wait_fixed(5))
     async def poll_task(self, task_id: str) -> str:
-        """Polls for task completion and returns the image URL"""
         url = f"{self.base_url}/api/v1/jobs/recordInfo"
         
         async with httpx.AsyncClient() as client:
             resp = await client.get(url, params={"taskId": task_id}, headers=self.headers, timeout=30.0)
             if resp.status_code != 200:
                 logger.warning(f"Kie Poll Error: {resp.status_code}")
-                raise Exception("Poll failed") # Retry
+                raise Exception("Poll failed")
             
             data = resp.json().get('data', {})
             state = data.get('state')
@@ -52,20 +50,17 @@ class KieService:
                 result_json = data.get('resultJson')
                 if result_json:
                     try:
-                        # resultJson is a stringified JSON
                         res = json.loads(result_json)
                         return res.get('resultUrls', [])[0]
                     except:
                         return result_json 
                 return None
             elif state == 'fail':
-                logger.error(f"Kie Task Failed: {data.get('failMsg')}")
-                raise Exception("Task state: fail") # Don't retry on fail state
+                raise Exception("Task state: fail")
             
             raise Exception("Task still processing")
 
     async def generate_hero_image(self, prompt: str) -> str:
-        """Generates Hero Image using nano-banana-pro"""
         logger.info(f"Generating Hero Image with prompt: {prompt}")
         task_id = await self.create_task("nano-banana-pro", {
             "prompt": prompt,
@@ -76,7 +71,6 @@ class KieService:
         return await self.poll_task(task_id)
 
     async def remove_text(self, image_url: str) -> str:
-        """Removes text from image using google/nano-banana-edit"""
         logger.info(f"Removing text from: {image_url}")
         task_id = await self.create_task("google/nano-banana-edit", {
             "prompt": "give me this image with no text, erase text",
