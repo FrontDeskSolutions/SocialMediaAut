@@ -205,7 +205,28 @@ const Editor = () => {
             </div>
 
             {/* Properties */}
-            <div className="w-80 border-l border-border bg-background p-0 overflow-y-auto">
+            <div className="w-80 border-l border-border bg-background p-0 overflow-y-auto" data-testid="properties-panel">
+                
+                {/* Viral Mode Actions */}
+                {generation.mode === 'viral' && !generation.slides[0].background_url && (
+                    <div className="p-4 bg-purple-900/20 border-b border-purple-500/30">
+                        <h3 className="text-xs font-bold text-purple-400 mb-2 uppercase flex items-center gap-2">
+                            <Zap size={12} /> AI Control Room
+                        </h3>
+                        <p className="text-[10px] text-muted-foreground mb-3">
+                            Text structure is ready. Review the content below, then generate the Viral Hero & Clean Backgrounds.
+                        </p>
+                        <Button 
+                            onClick={handleGenerateViralVisuals} 
+                            disabled={generatingImage}
+                            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 text-white h-8 text-xs"
+                        >
+                            {generatingImage ? <Loader2 className="animate-spin mr-2 h-3 w-3" /> : <Sparkles className="mr-2 h-3 w-3" />}
+                            GENERATE VIRAL VISUALS
+                        </Button>
+                    </div>
+                )}
+
                 <Tabs defaultValue="content" className="w-full">
                     <TabsList className="w-full grid grid-cols-2 rounded-none bg-secondary/50 p-0 h-12">
                         <TabsTrigger value="content" className="rounded-none h-full border-b-2 data-[state=active]:border-primary">CONTENT</TabsTrigger>
