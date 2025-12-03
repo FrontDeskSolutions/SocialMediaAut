@@ -1,0 +1,138 @@
+{
+  "identity": {
+    "persona": "E1: The Anti-AI Designer",
+    "mission": "Create a 'Pro Studio' Social Media Automation Dashboard that feels like a hacker's command center, not a generic SaaS.",
+    "principles": [
+      "Fusion over Imitation: Mix Finance precision with Streetwear aesthetics.",
+      "Emotion First: The user should feel 'Powerful' and 'Fast'.",
+      "Content is King: The user's content (carousels) must pop against the dark UI.",
+      "Contrast: High contrast neon against deep black."
+    ]
+  },
+  "theme": {
+    "mode": "dark",
+    "archetype": "ARCHETYPE 2: ELECTRIC & NEON",
+    "vibe": "Future, Speed, Disruption",
+    "palette": {
+      "background": "#050505",
+      "foreground": "#ffffff",
+      "card": "#0a0a0a",
+      "card_foreground": "#ffffff",
+      "popover": "#0a0a0a",
+      "popover_foreground": "#ffffff",
+      "primary": "#ccff00",
+      "primary_foreground": "#000000",
+      "secondary": "#1a1a1a",
+      "secondary_foreground": "#ffffff",
+      "muted": "#1a1a1a",
+      "muted_foreground": "#a3a3a3",
+      "accent": "#1a1a1a",
+      "accent_foreground": "#ccff00",
+      "destructive": "#ff0055",
+      "destructive_foreground": "#ffffff",
+      "border": "#262626",
+      "input": "#262626",
+      "ring": "#ccff00"
+    },
+    "gradients": {
+      "primary_glow": "radial-gradient(circle at center, rgba(204, 255, 0, 0.15) 0%, transparent 70%)",
+      "surface_sheen": "linear-gradient(145deg, rgba(255,255,255,0.05) 0%, transparent 100%)"
+    }
+  },
+  "typography": {
+    "headings": {
+      "family": "Outfit, sans-serif",
+      "weights": ["600", "700"],
+      "usage": "Use for all H1-H4. Tight tracking (-0.02em).",
+      "anti_pattern": "Do NOT use Inter for headings."
+    },
+    "body": {
+      "family": "Manrope, sans-serif",
+      "weights": ["400", "500"],
+      "usage": "Use for paragraphs, inputs, and data tables."
+    },
+    "mono": {
+      "family": "JetBrains Mono, monospace",
+      "usage": "Use for code snippets, API keys, and data values."
+    }
+  },
+  "layout": {
+    "spacing_scale": "Generous (2x standard). Use p-6, p-8, p-12.",
+    "container_padding": "px-6 md:px-12",
+    "border_radius": {
+      "default": "rounded-none",
+      "card": "rounded-sm",
+      "button": "rounded-none"
+    },
+    "grids": {
+      "dashboard": {
+        "name": "The Control Room",
+        "classes": "grid grid-cols-1 md:grid-cols-4 gap-6",
+        "rules": "Dense, data-heavy. Use col-span-2 for main charts."
+      },
+      "marketing": {
+        "name": "The Tetris Grid",
+        "classes": "grid grid-cols-1 md:grid-cols-12 gap-8",
+        "rules": "Asymmetrical. Hero takes 8 cols. Supporting takes 4."
+      }
+    }
+  },
+  "components": {
+    "buttons": {
+      "style": "Sharp edges (rounded-none) or minimal radius (rounded-sm).",
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wide",
+      "secondary": "border border-border bg-transparent hover:bg-secondary hover:text-white"
+    },
+    "cards": {
+      "style": "Flat background (#0a0a0a) with 1px border (#262626).",
+      "hover": "hover:border-primary/50 transition-colors duration-300",
+      "glass": "bg-black/60 backdrop-blur-xl border border-white/10"
+    },
+    "inputs": {
+      "style": "bg-secondary border-transparent focus:border-primary focus:ring-1 focus:ring-primary rounded-sm h-12"
+    },
+    "navigation": {
+      "sidebar": "Fixed left, w-64, border-r border-border bg-background",
+      "header": "Sticky top, glassmorphism (bg-background/80 backdrop-blur-md), border-b border-border"
+    }
+  },
+  "visual_enhancers": {
+    "textures": "Add subtle noise overlay to the background to kill digital flatness.",
+    "motion": {
+      "library": "framer-motion",
+      "transitions": "type: 'spring', stiffness: 300, damping: 30",
+      "hover": "scale: 1.02"
+    },
+    "borders": "Use 'Tracing Beam' effect for active states or pricing cards."
+  },
+  "assets": {
+    "images": [
+      {
+        "category": "workspace_hero",
+        "url": "https://images.unsplash.com/photo-1589183440456-34d255090e7b?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Dark mode workspace with monitor, good for hero section background or feature showcase."
+      },
+      {
+        "category": "team_meeting",
+        "url": "https://images.unsplash.com/photo-1671722294182-ed01cbe66bd1?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Overhead view of conference room, good for 'About Us' or 'Team' section."
+      },
+      {
+        "category": "desk_setup",
+        "url": "https://images.unsplash.com/photo-1697642438130-0158bc651cc3?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Clean desk setup with light, good for 'Productivity' context."
+      }
+    ],
+    "icons": "Use 'lucide-react' for standard UI. Use 'phosphor-icons' (Duotone) for feature highlights."
+  },
+  "universal_guidelines": [
+    "Do NOT use gradients for text unless it's a very specific brand moment.",
+    "Do NOT use 'Inter' for headings.",
+    "Do NOT center-align everything. Use asymmetry.",
+    "Always add 'data-testid' to interactive elements.",
+    "Use 'sonner' for toasts.",
+    "Ensure all text has sufficient contrast (APCA standards).",
+    "Never use pure black (#000000) for backgrounds, use #050505 or #0a0a0a."
+  ],
+  "instructions_to_main_agent": "You are building a Social Media Automation Dashboard. Focus on the 'Editor' experience. It should feel like a professional design tool (like Figma or Photoshop) but simplified. Use the 'Electric & Neon' theme to make it feel high-energy and productive. Implement the 'Control Room' grid for the analytics dashboard."
+}
