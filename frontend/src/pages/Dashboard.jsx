@@ -2,16 +2,18 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getGenerations, triggerGeneration } from '../services/api';
-import { Plus, Loader2, Image as ImageIcon, Zap, Palette } from 'lucide-react';
+import { Plus, Loader2, Image as ImageIcon, Zap, Palette, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
+// ... themeOptions (same) ...
 const themeOptions = [
   { id: "trust_clarity", name: "Trust & Clarity", color: "#0F172A" },
   { id: "modern_luxury", name: "Modern Luxury", color: "#1C1C1C" },
@@ -33,6 +35,10 @@ const Dashboard = () => {
   const [creating, setCreating] = useState(false);
   const [viralMode, setViralMode] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState("trust_clarity");
+  
+  // Business Context State
+  const [bizName, setBizName] = useState('');
+  const [bizType, setBizType] = useState('');
 
   const load = async () => {
     try {
@@ -56,7 +62,7 @@ const Dashboard = () => {
     if (!newTopic) return;
     setCreating(true);
     try {
-      await triggerGeneration(newTopic, slideCount, viralMode ? 'viral' : '', selectedTheme);
+      await triggerGeneration(newTopic, slideCount, viralMode ? 'viral' : '', selectedTheme, bizName, bizType);
       toast.success(viralMode ? "Text Generation Started (Images Manual)" : "Generation started");
       setNewTopic('');
       load();
@@ -69,26 +75,46 @@ const Dashboard = () => {
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8" data-testid="dashboard-container">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
         <div className="flex items-center gap-4">
             <h1 className="text-4xl font-bold text-white font-heading" data-testid="dashboard-title">CONTROL ROOM</h1>
             {viralMode && <span className="bg-primary text-black text-xs font-bold px-2 py-1 rounded uppercase animate-pulse">AI Viral Mode</span>}
         </div>
         
-        <div className="bg-card border border-border p-4 rounded-sm w-full md:w-auto flex flex-col gap-4">
+        <div className="bg-card border border-border p-6 rounded-lg w-full lg:w-auto flex flex-col gap-6 shadow-2xl">
+            <div className="flex items-center space-x-2 border-b border-border pb-4">
+                <Switch id="viral-mode" checked={viralMode} onCheckedChange={setViralMode} />
+                <Label htmlFor="viral-mode" className="text-sm font-bold cursor-pointer flex items-center gap-2">
+                    {viralMode ? <Zap size={14} className="text-purple-400" /> : <ImageIcon size={14} />} 
+                    {viralMode ? "AI VIRAL MODE" : "STANDARD MODE"}
+                </Label>
+            </div>
+
+            {/* Business Context Inputs */}
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-muted-foreground uppercase">Business Name</label>
+                    <Input value={bizName} onChange={e => setBizName(e.target.value)} placeholder="Acme Corp" className="h-8 bg-secondary border-border text-xs" />
+                </div>
+                <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-muted-foreground uppercase">Industry</label>
+                    <Input value={bizType} onChange={e => setBizType(e.target.value)} placeholder="SaaS, Gym..." className="h-8 bg-secondary border-border text-xs" />
+                </div>
+            </div>
+
             <form onSubmit={handleCreate} className="flex flex-col md:flex-row gap-4 items-end">
-                <div className="space-y-2">
+                <div className="space-y-2 flex-1">
                     <label className="text-xs font-mono text-muted-foreground">TOPIC</label>
                     <input 
                         value={newTopic}
                         onChange={e => setNewTopic(e.target.value)}
                         placeholder="Enter topic..."
-                        className="bg-secondary border border-border p-2 text-white w-64 focus:outline-none focus:border-primary h-10"
+                        className="bg-secondary border border-border p-2 text-white w-64 focus:outline-none focus:border-primary h-10 rounded-md"
                         data-testid="new-topic-input"
                     />
                 </div>
                 
-                <div className="space-y-2 w-32">
+                <div className="space-y-2 w-24">
                     <label className="text-xs font-mono text-muted-foreground flex justify-between">
                         <span>SLIDES</span>
                         <span className="text-primary">{slideCount}</span>
@@ -96,14 +122,12 @@ const Dashboard = () => {
                     <Slider 
                         value={[slideCount]} 
                         onValueChange={v => setSlideCount(v[0])}
-                        min={1} 
-                        max={10} 
-                        step={1}
+                        min={1} max={10} step={1}
                         className="py-2"
                     />
                 </div>
 
-                <div className="space-y-2 w-48">
+                <div className="space-y-2 w-40">
                     <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Palette size={12} /> THEME</label>
                     <Select value={selectedTheme} onValueChange={setSelectedTheme}>
                         <SelectTrigger className="bg-secondary border-border h-10">
@@ -122,19 +146,15 @@ const Dashboard = () => {
                     </Select>
                 </div>
 
-                <Button type="submit" disabled={creating} className={cn("text-black h-10 w-40", viralMode ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600" : "bg-primary hover:bg-primary/80")} data-testid="new-project-button">
-                    {creating ? <Loader2 className="animate-spin" /> : (viralMode ? <Zap className="mr-2" /> : <Plus className="mr-2" />)}
-                    {viralMode ? "GENERATE" : "NEW PROJECT"}
+                <Button type="submit" disabled={creating} className={cn("text-black h-10 font-bold w-32", viralMode ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600" : "bg-primary hover:bg-primary/80")} data-testid="new-project-button">
+                    {creating ? <Loader2 className="animate-spin" /> : <Plus className="mr-2" />}
+                    CREATE
                 </Button>
             </form>
-            
-            <div className="flex items-center space-x-2 pt-2 border-t border-border">
-                <Switch id="viral-mode" checked={viralMode} onCheckedChange={setViralMode} />
-                <Label htmlFor="viral-mode" className="text-xs text-muted-foreground cursor-pointer">Enable <strong>AI Control Room</strong> (Advanced AI Flow)</Label>
-            </div>
         </div>
       </div>
 
+      {/* Grid ... */}
       {loading ? (
         <div className="flex justify-center"><Loader2 className="animate-spin text-primary w-12 h-12" /></div>
       ) : (

@@ -11,7 +11,7 @@ import logging
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# ... existing read routes ...
+# ... read routes ...
 @router.get("/", response_model=List[Generation])
 async def list_generations():
     docs = await db.generations.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
@@ -20,8 +20,7 @@ async def list_generations():
 @router.get("/{id}", response_model=Generation)
 async def get_generation(id: str):
     doc = await db.generations.find_one({"id": id}, {"_id": 0})
-    if not doc:
-        raise HTTPException(status_code=404, detail="Generation not found")
+    if not doc: raise HTTPException(status_code=404)
     return doc
 
 @router.put("/{id}")
@@ -35,26 +34,22 @@ async def generate_slide_image(id: str, slide_id: str):
     doc = await db.generations.find_one({"id": id})
     if not doc: raise HTTPException(status_code=404)
     slide = next((s for s in doc['slides'] if s['id'] == slide_id), None)
-    if not slide: raise HTTPException(status_code=404)
     
     service = OpenAIService()
     url = await service.generate_image(slide['background_prompt'])
     
-    # Apply new defaults for standard generation too
     await db.generations.update_one(
         {"id": id, "slides.id": slide_id}, 
         {"$set": {
             "slides.$.background_url": url,
-            "slides.$.layout": "centered_stack",
-            "slides.$.theme_mode": "dark",
-            "slides.$.glass_intensity": "high",
+            # Reset defaults for safety
+            "slides.$.text_position": "middle_center", 
             "slides.$.container_opacity": 0.6
         }}
     )
     return {"url": url}
 
 async def process_viral_visuals(generation_id: str):
-    """Background task for generating viral assets with Vision Analysis"""
     kie_service = KieService()
     openai_service = OpenAIService()
     
@@ -92,21 +87,17 @@ async def process_viral_visuals(generation_id: str):
                 if clean_url and design_rec:
                     slides[i]['headline_color'] = design_rec.get('primaryColor')
                     slides[i]['font_color'] = design_rec.get('bodyColor')
-                    slides[i]['layout'] = design_rec.get('layout', 'centered_stack')
-                    
-                    slides[i]['theme_mode'] = design_rec.get('themeMode', 'dark')
-                    slides[i]['glass_intensity'] = design_rec.get('glassIntensity', 'high')
+                    slides[i]['font'] = design_rec.get('font', 'modern')
+                    slides[i]['text_position'] = design_rec.get('text_position', 'middle_center')
+                    slides[i]['text_align'] = design_rec.get('text_align', 'center')
                     slides[i]['container_opacity'] = design_rec.get('containerOpacity', 0.6)
                     slides[i]['text_shadow'] = design_rec.get('textShadow', True)
-
-            if slides[-1]['type'] != 'cta':
-                 slides[-1]['type'] = 'cta'
+                    slides[i]['text_width'] = design_rec.get('text_width', 'medium')
 
             await db.generations.update_one(
                 {"id": generation_id},
                 {"$set": {"slides": slides, "updated_at": datetime.now(timezone.utc)}}
             )
-            logger.info(f"Viral Visuals & Analysis Complete for {generation_id}")
 
     except Exception as e:
         logger.error(f"Viral Visuals Failed: {e}")
