@@ -19,6 +19,8 @@ class Slide(BaseModel):
     # Style Properties
     font: str = "modern"     # modern, serif, mono, bold
     text_effect: str = "none" # none, glow, gradient, chrome, glitch, neon
+    theme: str = "lime"      # lime, emerald, navy, burgundy, slate
+    arrow_color: str = "#ffffff" # hex color for the arrow
 
 class GenerationBase(BaseModel):
     topic: str

@@ -22,8 +22,17 @@ import {
   Palette, 
   Sparkles,
   Plus,
-  Trash2
+  Trash2,
+  Pipette
 } from 'lucide-react';
+
+const themeColors = {
+  lime: '#ccff00',
+  emerald: '#34d399',
+  navy: '#bae6fd',
+  burgundy: '#f472b6',
+  slate: '#f8fafc',
+};
 
 const Editor = () => {
   const { id } = useParams();
@@ -139,7 +148,8 @@ const Editor = () => {
         background_prompt: "Abstract background",
         type: "body",
         layout: "default",
-        font: "modern"
+        font: "modern",
+        theme: "lime"
     };
     const newSlides = [...generation.slides, newSlide];
     setGeneration({ ...generation, slides: newSlides });
@@ -290,6 +300,30 @@ const Editor = () => {
                         <TabsContent value="design" className="space-y-6 mt-0">
                              <div className="space-y-2">
                                 <label className="text-xs font-mono text-muted-foreground flex items-center gap-2">
+                                    <Palette size={12} /> THEME COLOR
+                                </label>
+                                <Select 
+                                    value={activeSlide.theme || 'lime'} 
+                                    onValueChange={v => handleUpdateSlide('theme', v)}
+                                >
+                                    <SelectTrigger className="bg-secondary border-transparent">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 rounded-full" style={{backgroundColor: themeColors[activeSlide.theme || 'lime']}} />
+                                            <SelectValue placeholder="Select Theme" />
+                                        </div>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="lime">Electric Lime</SelectItem>
+                                        <SelectItem value="emerald">Emerald Green</SelectItem>
+                                        <SelectItem value="navy">Deep Navy</SelectItem>
+                                        <SelectItem value="burgundy">Rich Burgundy</SelectItem>
+                                        <SelectItem value="slate">Clean Slate</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                             <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2">
                                     <Layout size={12} /> SLIDE TYPE
                                 </label>
                                 <Select 
@@ -379,6 +413,26 @@ const Editor = () => {
                                     </SelectContent>
                                 </Select>
                             </div>
+
+                            {activeSlide.type !== 'cta' && (
+                                <div className="space-y-2">
+                                    <label className="text-xs font-mono text-muted-foreground flex items-center gap-2">
+                                        <Pipette size={12} /> ARROW COLOR
+                                    </label>
+                                    <div className="flex gap-2 items-center">
+                                        <div 
+                                            className="w-8 h-8 rounded-full border border-border shadow-sm" 
+                                            style={{backgroundColor: activeSlide.arrow_color || '#ffffff'}} 
+                                        />
+                                        <input 
+                                            type="color" 
+                                            value={activeSlide.arrow_color || '#ffffff'}
+                                            onChange={(e) => handleUpdateSlide('arrow_color', e.target.value)}
+                                            className="flex-1 h-8 bg-secondary border border-border cursor-pointer"
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </TabsContent>
                     </div>
                 </Tabs>
