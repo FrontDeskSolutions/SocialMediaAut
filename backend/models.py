@@ -10,11 +10,19 @@ class Slide(BaseModel):
     content: str
     background_prompt: str
     background_url: Optional[str] = None
-    layout: str = "default"  # default, center, split_left, split_right, minimalist
+    
+    # Design Properties
+    type: str = "body"       # hero, body, cta
+    layout: str = "default"  # varies by type
+    variant: str = "1"       # For CTA: 1, 2, 3
+    
+    # Style Properties
     font: str = "modern"     # modern, serif, mono, bold
+    text_effect: str = "none" # none, glow, gradient, chrome, glitch, neon
 
 class GenerationBase(BaseModel):
     topic: str
+    slide_count: int = 5
     status: str = "pending"
 
 class GenerationCreate(GenerationBase):
@@ -30,5 +38,6 @@ class Generation(GenerationBase):
 
 class WebhookPayload(BaseModel):
     topic: str
+    slide_count: int = 5
     rss_source: Optional[str] = None
     extra_context: Optional[str] = None

@@ -10,11 +10,11 @@ import logging
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-async def process_generation(generation_id: str, topic: str, context: str):
+async def process_generation(generation_id: str, topic: str, count: int, context: str):
     service = OpenAIService()
     try:
         # 1. Generate Content
-        slides_data = await service.generate_slides_content(topic, context)
+        slides_data = await service.generate_slides_content(topic, count, context)
         
         slides = []
         for s in slides_data:
@@ -22,6 +22,7 @@ async def process_generation(generation_id: str, topic: str, context: str):
                 title=s.get('title', ''),
                 content=s.get('content', ''),
                 background_prompt=s.get('background_prompt', 'Abstract minimal background'),
+                type=s.get('type', 'body'),
                 background_url=None
             ).model_dump())
 
@@ -42,7 +43,10 @@ async def process_generation(generation_id: str, topic: str, context: str):
 async def trigger_generation(payload: WebhookPayload, background_tasks: BackgroundTasks):
     """Endpoint for n8n to trigger a generation"""
     
-    gen = Generation(topic=payload.topic, status="processing")
+    # Default to 5 if not specified
+    count = payload.slide_count if payload.slide_count and payload.slide_count > 0 else 5
+    
+    gen = Generation(topic=payload.topic, slide_count=count, status="processing")
     doc = gen.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     doc['updated_at'] = doc['updated_at'].isoformat()
@@ -54,6 +58,7 @@ async def trigger_generation(payload: WebhookPayload, background_tasks: Backgrou
         process_generation, 
         gen.id, 
         payload.topic, 
+        count,
         f"{payload.rss_source or ''} {payload.extra_context or ''}"
     )
     
