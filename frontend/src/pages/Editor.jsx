@@ -6,7 +6,10 @@ import { SlideCanvas } from '@/components/SlideCanvas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { 
   Loader2, 
   Save, 
@@ -21,10 +24,91 @@ import {
   Trash2
 } from 'lucide-react';
 
-// ... imports ...
-
 const Editor = () => {
-  // ... state ...
+  const { id } = useParams();
+  const [generation, setGeneration] = useState(null);
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
+
+  const activeSlide = generation?.slides?.[activeSlideIndex];
+
+  useEffect(() => {
+    loadGeneration();
+  }, [id]);
+
+  const loadGeneration = async () => {
+    try {
+      const data = await getGeneration(id);
+      setGeneration(data);
+      if (!data.slides || data.slides.length === 0) {
+        toast.error("No slides found in this generation");
+        return;
+      }
+    } catch (e) {
+      toast.error("Failed to load generation");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateSlide = (field, value) => {
+    if (!generation || !activeSlide) return;
+    
+    const updatedSlides = generation.slides.map((slide, idx) => 
+      idx === activeSlideIndex ? { ...slide, [field]: value } : slide
+    );
+    setGeneration({ ...generation, slides: updatedSlides });
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateGeneration(id, generation);
+      toast.success("Saved successfully");
+    } catch (e) {
+      toast.error("Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleGenerateImage = async () => {
+    if (!activeSlide) return;
+    setGeneratingImage(true);
+    try {
+      const result = await generateImage(id, activeSlide.id);
+      const updatedSlides = generation.slides.map((slide, idx) => 
+        idx === activeSlideIndex ? { ...slide, background_url: result.url } : slide
+      );
+      setGeneration({ ...generation, slides: updatedSlides });
+      toast.success("Image generated");
+    } catch (e) {
+      toast.error("Failed to generate image");
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <Loader2 className="animate-spin text-primary w-12 h-12" />
+      </div>
+    );
+  }
+
+  if (!generation || !generation.slides || generation.slides.length === 0) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">No slides found</h2>
+          <p className="text-muted-foreground">This generation doesn't have any slides yet.</p>
+        </div>
+      </div>
+    );
+  }
 
   const addSlide = () => {
     const newSlide = {
