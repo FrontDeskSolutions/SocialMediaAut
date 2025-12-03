@@ -32,7 +32,6 @@ async def update_generation(id: str, update_data: dict):
 
 @router.post("/{id}/generate-image/{slide_id}")
 async def generate_slide_image(id: str, slide_id: str):
-    # (Standard DALL-E generation - unchanged)
     doc = await db.generations.find_one({"id": id})
     if not doc: raise HTTPException(status_code=404)
     slide = next((s for s in doc['slides'] if s['id'] == slide_id), None)
@@ -40,7 +39,16 @@ async def generate_slide_image(id: str, slide_id: str):
     
     service = OpenAIService()
     url = await service.generate_image(slide['background_prompt'])
-    await db.generations.update_one({"id": id, "slides.id": slide_id}, {"$set": {"slides.$.background_url": url}})
+    
+    # Standard flow image generation - apply defaults
+    await db.generations.update_one(
+        {"id": id, "slides.id": slide_id}, 
+        {"$set": {
+            "slides.$.background_url": url,
+            "slides.$.text_position": "middle_center",
+            "slides.$.container_opacity": 0.8
+        }}
+    )
     return {"url": url}
 
 async def process_viral_visuals(generation_id: str):
@@ -62,6 +70,8 @@ async def process_viral_visuals(generation_id: str):
         
         # 2. Generate Clean Background (Nano Banana Edit)
         clean_url = None
+        design_rec = {}
+        
         if hero_url:
             logger.info(f"Generating Clean BG for {generation_id}")
             clean_url = await kie_service.remove_text(hero_url)
@@ -79,11 +89,21 @@ async def process_viral_visuals(generation_id: str):
             
             # Update Body Slides with Clean BG + Recommended Design
             for i in range(1, len(slides)):
+                # Keep CTA distinct if possible, but for now apply global style
                 slides[i]['background_url'] = clean_url
                 if clean_url and design_rec:
                     slides[i]['font_color'] = design_rec.get('font_color')
-                    slides[i]['font'] = design_rec.get('font')
-                    slides[i]['spacing'] = design_rec.get('spacing')
+                    slides[i]['font'] = design_rec.get('font', 'modern')
+                    # Apply new fields
+                    slides[i]['text_position'] = design_rec.get('text_position', 'middle_center')
+                    slides[i]['text_align'] = design_rec.get('text_align', 'center')
+                    slides[i]['container_opacity'] = design_rec.get('container_opacity', 0.8)
+                    slides[i]['text_shadow'] = design_rec.get('text_shadow', False)
+                    slides[i]['text_width'] = design_rec.get('text_width', 'medium')
+
+            # Force last slide to be CTA if it was missed
+            if slides[-1]['type'] != 'cta':
+                 slides[-1]['type'] = 'cta'
 
             await db.generations.update_one(
                 {"id": generation_id},

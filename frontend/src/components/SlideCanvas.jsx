@@ -38,21 +38,39 @@ const themeMap = {
   sunset_corporate: { headline: '#7C2D12', subheadline: '#A87666', background: '#FFF7ED' },
 };
 
+// Helper for position classes
+const positionClasses = {
+    top_left: "justify-start items-start",
+    top_center: "justify-start items-center",
+    top_right: "justify-start items-end",
+    middle_left: "justify-center items-start",
+    middle_center: "justify-center items-center",
+    middle_right: "justify-center items-end",
+    bottom_left: "justify-end items-start",
+    bottom_center: "justify-end items-center",
+    bottom_right: "justify-end items-end",
+};
+
+const alignClasses = {
+    left: "text-left",
+    center: "text-center",
+    right: "text-right",
+};
+
+const widthClasses = {
+    narrow: "max-w-xl",
+    medium: "max-w-3xl",
+    wide: "max-w-5xl",
+    full: "w-full px-12",
+};
+
 export const SlideCanvas = ({ slide, id }) => {
-  // Add safety check for slide object
-  if (!slide) {
-    return (
-      <div id={id} className="relative w-[1080px] h-[1080px] flex items-center justify-center bg-gray-200">
-        <div className="text-gray-500">Loading slide...</div>
-      </div>
-    );
-  }
+  if (!slide) return null;
 
   const bgUrl = slide.background_url 
     ? `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001'}/api/proxy/image?url=${encodeURIComponent(slide.background_url)}`
     : null;
 
-  const layout = slide.layout || 'default';
   const font = fontMap[slide.font] || fontMap.modern;
   const effect = effectMap[slide.text_effect] || "";
   const type = slide.type || 'body';
@@ -62,33 +80,32 @@ export const SlideCanvas = ({ slide, id }) => {
   const themeKey = slide.theme || 'trust_clarity';
   const theme = themeMap[themeKey] || themeMap.trust_clarity;
   
-  // AI-Analyzed Overrides (or defaults)
+  // Advanced Layout Props
   const fontColor = slide.font_color || theme.headline;
-  const subheadColor = slide.font_color ? slide.font_color : theme.subheadline; // If AI chose color, use it for subhead too (simplified)
-  const spacingStyle = slide.spacing || 'normal';
-  
   const textBgEnabled = slide.text_bg_enabled !== false; 
+  
+  const position = slide.text_position || 'middle_center';
+  const align = slide.text_align || 'center';
+  const width = slide.text_width || 'medium';
+  const containerOpacity = slide.container_opacity !== undefined ? slide.container_opacity : 0.8;
+  const hasShadow = slide.text_shadow || false;
 
-  // Dynamic Padding
-  const containerPadding = spacingStyle === 'wide' ? 'p-32' : spacingStyle === 'compact' ? 'p-16' : 'p-24';
-
-  // CSS Vars for Effects
+  // CSS Vars
   const styleVars = {
     '--theme-headline': fontColor,
-    '--theme-subheadline': subheadColor,
+    '--theme-subheadline': fontColor, // simplified
   };
 
-  const textContainerClass = cn(
-    "transition-all duration-300",
-    textBgEnabled && "p-12 rounded-xl shadow-2xl border border-black/5 backdrop-blur-md"
-  );
-  
-  // Intelligent background for text: White-ish for light themes, Dark for dark themes
-  // We can guess darkness by checking if background is #1... or #0...
+  // Container Style Calculation
   const isDarkTheme = theme.background.startsWith('#1') || theme.background.startsWith('#0');
+  const baseBgColor = isDarkTheme ? '0,0,0' : '255,255,255';
+  
   const textContainerStyle = textBgEnabled ? { 
-    backgroundColor: isDarkTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.85)' 
-  } : {};
+    backgroundColor: `rgba(${baseBgColor}, ${containerOpacity})`,
+    textShadow: hasShadow ? '0 2px 4px rgba(0,0,0,0.5)' : 'none'
+  } : {
+    textShadow: hasShadow ? '0 2px 10px rgba(0,0,0,0.8)' : 'none'
+  };
 
   const renderContent = () => {
     // --- CTA SLIDES ---
@@ -96,33 +113,51 @@ export const SlideCanvas = ({ slide, id }) => {
       return (
         <div className="relative z-10 h-full w-full flex flex-col items-center justify-center p-16">
            {variant === '1' && (
-             <div className={cn("text-center space-y-8 w-full max-w-4xl", textContainerClass)} style={textContainerStyle}>
+             <div className={cn("space-y-8 w-full max-w-4xl p-12 rounded-xl backdrop-blur-sm border border-white/10 text-center")} style={textContainerStyle}>
                 <div className={cn("text-8xl uppercase tracking-tighter whitespace-pre-wrap", font, effect)} style={{color: fontColor}} data-text={slide.title}>
                   {slide.title}
                 </div>
                 <div className="text-5xl font-medium px-12 py-8 rounded-full border inline-block whitespace-pre-wrap"
-                    style={{ color: theme.background, backgroundColor: fontColor, borderColor: subheadColor }}>
+                    style={{ color: theme.background, backgroundColor: fontColor }}>
                     {slide.content}
                 </div>
              </div>
            )}
-           {/* Add other variants here if needed, keeping it simple for fix */}
+           {variant === '2' && (
+              <div className={cn("flex flex-col items-center justify-center text-center space-y-12 w-full max-w-3xl p-12 rounded-xl backdrop-blur-sm")} style={textContainerStyle}>
+                <div className="w-64 h-64 rounded-full border-4 overflow-hidden relative" style={{borderColor: fontColor}}>
+                   <div className="absolute inset-0 flex items-center justify-center text-6xl">👤</div>
+                </div>
+                <div className={cn("text-7xl uppercase tracking-tighter whitespace-pre-wrap", font, effect)} style={{color: fontColor}} data-text={slide.title}>
+                 {slide.title}
+               </div>
+               <p className="text-4xl whitespace-pre-wrap" style={{color: fontColor}}>{slide.content}</p>
+              </div>
+           )}
+           {variant === '3' && (
+              <div className="flex flex-col items-center justify-center space-y-16 w-full max-w-5xl">
+                <div className={cn("text-9xl uppercase tracking-tighter text-center drop-shadow-2xl whitespace-pre-wrap", font, effect)} style={{color: fontColor, textShadow: '0 4px 30px rgba(0,0,0,0.8)'}} data-text={slide.title}>
+                  {slide.title}
+                </div>
+                <div className="w-full py-12 text-7xl font-bold uppercase flex items-center justify-center hover:scale-105 transition-transform cursor-pointer shadow-xl rounded-lg" style={{ backgroundColor: fontColor, color: theme.background }}>
+                    {slide.content}
+                </div>
+              </div>
+           )}
         </div>
       );
     }
 
     // --- HERO SLIDES ---
     if (type === 'hero') {
-        // If there is no content (pure image hero), show nothing
         if (!slide.content && !slide.title) return null;
-
         return (
-            <div className={cn("relative z-10 h-full flex flex-col justify-center w-full", containerPadding)}>
-                <div className={cn("flex flex-col gap-8 max-w-5xl", textContainerClass)} style={textContainerStyle}>
+            <div className={cn("relative z-10 h-full flex flex-col p-24", positionClasses[position])}>
+                <div className={cn("flex flex-col gap-8 p-12 rounded-xl backdrop-blur-sm", widthClasses[width], alignClasses[align])} style={textContainerStyle}>
                     <div className={cn("text-9xl uppercase tracking-tighter leading-[0.85] whitespace-pre-wrap", font, effect)} style={{color: fontColor}} data-text={slide.title}>
                         {slide.title}
                     </div>
-                    <p className="text-5xl font-body font-light leading-tight whitespace-pre-wrap" style={{color: subheadColor}}>
+                    <p className="text-5xl font-body font-light leading-tight whitespace-pre-wrap" style={{color: fontColor}}>
                         {slide.content}
                     </p>
                 </div>
@@ -130,25 +165,18 @@ export const SlideCanvas = ({ slide, id }) => {
         );
     }
 
-    // --- BODY SLIDES ---
+    // --- BODY SLIDES (Advanced Layout) ---
     return (
-      <div className={cn(
-        "relative z-10 flex flex-col w-full h-full",
-        layout === 'default' && `justify-between ${containerPadding}`,
-        layout === 'center' && `items-center justify-center text-center ${containerPadding} space-y-12`,
-      )}>
-        
-        <div className={cn(
-            "uppercase tracking-tighter leading-[0.9] drop-shadow-xl whitespace-pre-wrap",
-            font, effect,
-            layout === 'center' ? "text-9xl" : "text-8xl",
-        )} style={{color: fontColor}} data-text={slide.title}>
-          {slide.title}
-        </div>
+      <div className={cn("relative z-10 h-full flex flex-col p-24", positionClasses[position])}>
+        <div className={cn("flex flex-col gap-8 p-12 rounded-xl backdrop-blur-sm border border-white/5 transition-all duration-300", widthClasses[width], alignClasses[align])} style={textContainerStyle}>
+            <div className={cn(
+                "uppercase tracking-tighter leading-[0.9] whitespace-pre-wrap",
+                font, effect, "text-8xl"
+            )} style={{color: fontColor}} data-text={slide.title}>
+              {slide.title}
+            </div>
 
-        <div className={cn("relative whitespace-pre-wrap max-w-4xl", textContainerClass)} style={textContainerStyle}>
-            <p className={cn("font-medium leading-snug font-body", layout === 'center' ? "text-6xl" : "text-5xl")} 
-               style={{color: isDarkTheme ? '#fff' : '#000'}}>
+            <p className={cn("font-medium leading-snug font-body text-5xl whitespace-pre-wrap")} style={{color: fontColor}}>
                 {slide.content}
             </p>
         </div>

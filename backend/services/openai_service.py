@@ -29,6 +29,7 @@ class OpenAIService:
             - 'title': Headline
             - 'content': Body text (max 40 words)
         """
+        
         try:
             response = await self.client.chat.completions.create(
                 model=self.model,
@@ -36,20 +37,29 @@ class OpenAIService:
                 response_format={"type": "json_object"}
             )
             return json.loads(response.choices[0].message.content)
-        except Exception:
+        except Exception as e:
+            logger.error(f"LLM Error: {e}")
             raise
 
     async def analyze_design_from_image(self, image_url: str) -> dict:
-        # Vision Analysis Logic
+        """
+        Uses GPT-4o Vision to analyze the background image and recommend design settings.
+        """
         system_prompt = """You are an expert UI/UX designer. 
-        Analyze this background image.
+        Analyze this background image for a social media slide. Find the "Safe Zone" (negative space) where text will be most readable.
+        
         Return JSON:
         {
-            "font_color": "Hex color that contrasts BEST (e.g. #FFFFFF)",
-            "font": "modern", 
-            "spacing": "normal"
+            "font_color": "Hex code (high contrast)",
+            "text_position": "One of: top_left, top_center, top_right, middle_left, middle_center, middle_right, bottom_left, bottom_center, bottom_right",
+            "text_align": "left, center, or right",
+            "container_opacity": "Float 0.0 to 1.0 (Use 0.0 if background is clean solid color, 0.9 if busy/noisy)",
+            "text_shadow": true/false (Use true if background is light/complex),
+            "font": "modern",
+            "text_width": "narrow, medium, or wide"
         }
         """
+        
         try:
             response = await self.client.chat.completions.create(
                 model="gpt-4o", 
@@ -66,21 +76,20 @@ class OpenAIService:
                 max_tokens=300
             )
             return json.loads(response.choices[0].message.content)
-        except Exception:
-            return {"font_color": "#ffffff", "font": "modern", "spacing": "normal"}
+        except Exception as e:
+            logger.error(f"Vision Analysis Error: {e}")
+            return {
+                "font_color": "#ffffff", 
+                "text_position": "middle_center",
+                "text_align": "center",
+                "container_opacity": 0.8,
+                "text_shadow": False,
+                "font": "modern"
+            }
 
     async def generate_slides_content(self, topic: str, count: int = 5, context: str = "") -> list[dict]:
         system_prompt = f"""You are a social media expert. Generate a {count}-slide carousel. 
         Return ONLY a JSON object with a 'slides' key containing an array of {count} objects.
-        Structure logic:
-        - Slide 1 MUST be type='hero'.
-        - Middle slides MUST be type='body'.
-        - Last slide MUST be type='cta'.
-        Each object must have:
-        - 'type': 'hero', 'body', or 'cta'.
-        - 'title': Short, punchy headline.
-        - 'content': The main text (max 40 words).
-        - 'background_prompt': A visual description for DALL-E 3.
         """
         user_prompt = f"Topic: {topic}\nSlide Count: {count}\nContext: {context}"
         try:
@@ -92,7 +101,17 @@ class OpenAIService:
                 ],
                 response_format={"type": "json_object"}
             )
-            return json.loads(response.choices[0].message.content).get("slides", [])
+            slides = json.loads(response.choices[0].message.content).get("slides", [])
+            
+            # STRICT ENFORCEMENT: Ensure last slide is CTA
+            if slides:
+                slides[-1]['type'] = 'cta'
+                if 'CTA' not in slides[-1].get('title', '').upper() and 'ACTION' not in slides[-1].get('title', '').upper():
+                    # Only overwrite if it doesn't look like a CTA already
+                    slides[-1]['title'] = "Ready to Learn More?"
+                    slides[-1]['content'] = "Follow for more insights on this topic."
+            
+            return slides
         except Exception:
             raise
 

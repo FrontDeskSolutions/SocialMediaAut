@@ -20,19 +20,23 @@ class Slide(BaseModel):
     
     # Design Properties
     type: str = "body"       
-    layout: str = "default"
+    layout: str = "default" # Deprecated in favor of detailed positioning, keeping for backward compat
     variant: str = "1"       
     
     # Style Properties
-    font: str = "modern"     # modern, serif, mono, bold, handwritten, futuristic, editorial
-    text_effect: str = "none" 
+    font: str = "modern"
+    text_effect: str = "none"
     theme: str = "trust_clarity" 
     arrow_color: str = "#ffffff"
     text_bg_enabled: bool = True
     
-    # AI-Analyzed Properties
-    font_color: Optional[str] = None # Overlay color decided by AI vision
-    spacing: str = "normal" # compact, normal, wide
+    # AI-Analyzed / Advanced Layout Properties
+    font_color: Optional[str] = None 
+    text_position: str = "middle_center" # top_left, top_center, top_right, middle_left, middle_center, middle_right, bottom_left, bottom_center, bottom_right
+    text_align: str = "center" # left, center, right
+    container_opacity: float = 0.8 
+    text_shadow: bool = False
+    text_width: str = "medium" # narrow, medium, wide
 
 class GenerationBase(BaseModel):
     topic: str

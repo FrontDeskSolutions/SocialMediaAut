@@ -1,24 +1,25 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getGeneration, updateGeneration, generateImage } from '../services/api';
 import { SlideCanvas } from '@/components/SlideCanvas';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import * as htmlToImage from 'html-to-image';
 import { 
-  Loader2, Save, Download, Wand2, ArrowLeft, Layout, Type, Palette, Sparkles, Plus, Trash2, Pipette, Frame, Zap
+  Loader2, Save, Download, Wand2, ArrowLeft, Layout, Type, Palette, Sparkles, Plus, Trash2, Pipette, Frame, Zap, Move, AlignLeft, AlignCenter, AlignRight, Square
 } from 'lucide-react';
 import '@/styles/effects.css';
 
-// ... (keep imports same as provided context)
-
+// ... themeOptions ...
 const themeOptions = [
   { id: "trust_clarity", name: "Trust & Clarity", color: "#0F172A" },
   { id: "modern_luxury", name: "Modern Luxury", color: "#1C1C1C" },
@@ -69,8 +70,6 @@ const Editor = () => {
     if (field === 'theme') {
         updatedSlides = updatedSlides.map(slide => ({ ...slide, theme: value }));
         toast.info("Theme updated for all slides");
-    } else if (field === 'text_bg_enabled_global') {
-        updatedSlides = updatedSlides.map(slide => ({ ...slide, text_bg_enabled: value }));
     } else {
         updatedSlides[activeSlideIndex] = { ...activeSlide, [field]: value };
     }
@@ -78,6 +77,7 @@ const Editor = () => {
     setGeneration({ ...generation, slides: updatedSlides });
   };
 
+  // ... handleSave, handleGenerateImage, downloadSlide, handleGenerateViralVisuals ...
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -141,9 +141,7 @@ const Editor = () => {
     }
   };
 
-  if (loading) return <div className="h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary" /></div>;
-  if (!generation) return <div>Not Found</div>;
-
+  // ... addSlide, deleteSlide ...
   const addSlide = () => {
     const newSlide = {
         id: crypto.randomUUID(),
@@ -155,12 +153,10 @@ const Editor = () => {
         theme: activeSlide?.theme || 'trust_clarity',
         text_bg_enabled: true
     };
-    // Ensure CTA is last
     const slidesWithoutCTA = generation.slides.filter(s => s.type !== 'cta');
     const ctaSlide = generation.slides.find(s => s.type === 'cta');
-    
     const newSlides = [...slidesWithoutCTA, newSlide];
-    if (ctaSlide) newSlides.push(ctaSlide); // Keep CTA at end
+    if (ctaSlide) newSlides.push(ctaSlide);
     
     setGeneration({ ...generation, slides: newSlides });
     setActiveSlideIndex(newSlides.length - (ctaSlide ? 2 : 1));
@@ -174,9 +170,12 @@ const Editor = () => {
     if (activeSlideIndex >= index && activeSlideIndex > 0) setActiveSlideIndex(activeSlideIndex - 1);
   };
 
+  if (loading) return <div className="h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary" /></div>;
+  if (!generation) return <div>Not Found</div>;
+
   return (
-    <div className="h-screen bg-background text-foreground flex flex-col">
-        {/* Header */}
+    <div className="h-screen bg-background text-white flex flex-col">
+        {/* Header... */}
         <div className="border-b border-border bg-card px-6 py-4 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-4">
                 <Link to="/"><Button variant="ghost" size="sm"><ArrowLeft className="mr-2" /> Back</Button></Link>
@@ -188,9 +187,8 @@ const Editor = () => {
             </div>
         </div>
 
-        {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
-            {/* Sidebar */}
+            {/* Sidebar... */}
             <div className="w-48 border-r border-border bg-secondary/20 overflow-y-auto p-4 space-y-4 flex flex-col shrink-0">
                 {generation.slides.map((slide, idx) => (
                     <div key={slide.id} onClick={() => setActiveSlideIndex(idx)} className={cn("aspect-square bg-black border-2 cursor-pointer relative group shrink-0", activeSlideIndex === idx ? "border-primary" : "border-border")}>
@@ -202,7 +200,7 @@ const Editor = () => {
                 <Button onClick={addSlide} variant="outline" className="shrink-0"><Plus className="mr-2" /> Add Slide</Button>
             </div>
 
-            {/* Canvas */}
+            {/* Canvas... */}
             <div className="flex-1 bg-[#0a0a0a] flex items-center justify-center p-12 overflow-hidden relative">
                 <div className="absolute inset-0 opacity-10 pointer-events-none" style={{backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '40px 40px'}} />
                 <div className="transform scale-[0.55] shadow-2xl border border-white/10">
@@ -212,7 +210,6 @@ const Editor = () => {
 
             {/* Properties Panel */}
             <div className="w-80 border-l border-border bg-background p-0 overflow-y-auto shrink-0">
-                
                 {generation.mode === 'viral' && !generation.slides[0].background_url && (
                     <div className="p-4 bg-purple-900/20 border-b border-purple-500/30">
                         <h3 className="text-xs font-bold text-purple-400 mb-2 flex items-center gap-2"><Zap size={12} /> AI CONTROL ROOM</h3>
@@ -229,6 +226,7 @@ const Editor = () => {
                     </TabsList>
                     
                     <div className="p-6 space-y-6">
+                        {/* Content Tab... (Standard) */}
                         <TabsContent value="content" className="space-y-6 mt-0">
                             <div className="space-y-2">
                                 <label className="text-xs font-mono text-muted-foreground">HEADLINE</label>
@@ -261,25 +259,54 @@ const Editor = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Frame size={12} /> TEXT CONTAINER</label>
-                                <div className="flex items-center space-x-2 border border-border p-2 rounded-md bg-secondary/20">
-                                    <Switch id="text-bg" checked={activeSlide.text_bg_enabled !== false} onCheckedChange={(v) => handleUpdateSlide('text_bg_enabled', v)} />
+                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Frame size={12} /> CONTAINER STYLE</label>
+                                <div className="flex items-center justify-between border border-border p-2 rounded-md bg-secondary/20 mb-2">
                                     <Label htmlFor="text-bg" className="text-xs">Enable Background</Label>
+                                    <Switch id="text-bg" checked={activeSlide.text_bg_enabled !== false} onCheckedChange={(v) => handleUpdateSlide('text_bg_enabled', v)} />
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex justify-between text-xs text-muted-foreground"><span>Opacity</span><span>{Math.round((activeSlide.container_opacity || 0.8) * 100)}%</span></div>
+                                    <Slider 
+                                        value={[activeSlide.container_opacity !== undefined ? activeSlide.container_opacity : 0.8]} 
+                                        min={0} max={1} step={0.1} 
+                                        onValueChange={v => handleUpdateSlide('container_opacity', v[0])} 
+                                    />
                                 </div>
                             </div>
 
-                             <div className="space-y-2">
-                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Layout size={12} /> SLIDE TYPE</label>
-                                <Select value={activeSlide.type || 'body'} onValueChange={v => handleUpdateSlide('type', v)}>
+                            <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Move size={12} /> POSITION & SIZE</label>
+                                <Select value={activeSlide.text_position || 'middle_center'} onValueChange={v => handleUpdateSlide('text_position', v)}>
                                     <SelectTrigger className="bg-secondary border-transparent"><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="hero">Hero</SelectItem>
-                                        <SelectItem value="body">Body</SelectItem>
-                                        <SelectItem value="cta">CTA</SelectItem>
+                                        <SelectItem value="top_left">Top Left</SelectItem>
+                                        <SelectItem value="top_center">Top Center</SelectItem>
+                                        <SelectItem value="top_right">Top Right</SelectItem>
+                                        <SelectItem value="middle_left">Middle Left</SelectItem>
+                                        <SelectItem value="middle_center">Middle Center</SelectItem>
+                                        <SelectItem value="middle_right">Middle Right</SelectItem>
+                                        <SelectItem value="bottom_left">Bottom Left</SelectItem>
+                                        <SelectItem value="bottom_center">Bottom Center</SelectItem>
+                                        <SelectItem value="bottom_right">Bottom Right</SelectItem>
                                     </SelectContent>
                                 </Select>
+                                <div className="grid grid-cols-3 gap-2 mt-2">
+                                    {['narrow', 'medium', 'wide'].map(w => (
+                                        <Button key={w} variant={activeSlide.text_width === w ? 'default' : 'outline'} onClick={() => handleUpdateSlide('text_width', w)} className="text-[10px] h-8 uppercase">{w}</Button>
+                                    ))}
+                                </div>
                             </div>
 
+                            <div className="space-y-2">
+                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><AlignLeft size={12} /> ALIGNMENT</label>
+                                <div className="flex gap-2">
+                                    <Button variant={activeSlide.text_align === 'left' ? 'default' : 'outline'} onClick={() => handleUpdateSlide('text_align', 'left')} className="flex-1 h-8"><AlignLeft size={14} /></Button>
+                                    <Button variant={activeSlide.text_align === 'center' ? 'default' : 'outline' || !activeSlide.text_align} onClick={() => handleUpdateSlide('text_align', 'center')} className="flex-1 h-8"><AlignCenter size={14} /></Button>
+                                    <Button variant={activeSlide.text_align === 'right' ? 'default' : 'outline'} onClick={() => handleUpdateSlide('text_align', 'right')} className="flex-1 h-8"><AlignRight size={14} /></Button>
+                                </div>
+                            </div>
+
+                            {/* Typography & Effects (Standard) */}
                             <div className="space-y-2">
                                 <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Type size={12} /> TYPOGRAPHY</label>
                                 <Select value={activeSlide.font || 'modern'} onValueChange={v => handleUpdateSlide('font', v)}>
@@ -295,31 +322,6 @@ const Editor = () => {
                                     </SelectContent>
                                 </Select>
                             </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Sparkles size={12} /> TEXT EFFECT</label>
-                                <Select value={activeSlide.text_effect || 'none'} onValueChange={v => handleUpdateSlide('text_effect', v)}>
-                                    <SelectTrigger className="bg-secondary border-transparent"><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">None</SelectItem>
-                                        <SelectItem value="glow">Glow</SelectItem>
-                                        <SelectItem value="gradient">Gradient</SelectItem>
-                                        <SelectItem value="chrome">Chrome</SelectItem>
-                                        <SelectItem value="glitch">Glitch</SelectItem>
-                                        <SelectItem value="neon">Neon</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {activeSlide.type !== 'cta' && (
-                                <div className="space-y-2">
-                                    <label className="text-xs font-mono text-muted-foreground flex items-center gap-2"><Pipette size={12} /> ARROW COLOR</label>
-                                    <div className="flex gap-2 items-center">
-                                        <div className="w-8 h-8 rounded-full border border-border" style={{backgroundColor: activeSlide.arrow_color || '#ffffff'}} />
-                                        <input type="color" value={activeSlide.arrow_color || '#ffffff'} onChange={(e) => handleUpdateSlide('arrow_color', e.target.value)} className="flex-1 h-8 bg-secondary border border-border cursor-pointer" />
-                                    </div>
-                                </div>
-                            )}
                         </TabsContent>
                     </div>
                 </Tabs>
