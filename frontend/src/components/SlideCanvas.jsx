@@ -22,8 +22,6 @@ const effectMap = {
   neon: "effect-neon",
 };
 
-// Positioning Logic: DECOUPLED from text alignment
-// This positions the CONTAINER box relative to the slide
 const positionMap = {
     top_left: { top: '10%', left: '10%', transform: 'none' },
     top_center: { top: '10%', left: '50%', transform: 'translateX(-50%)' },
@@ -65,11 +63,10 @@ export const SlideCanvas = ({ slide, id }) => {
   const textBgEnabled = slide.text_bg_enabled !== false; 
   
   const position = slide.text_position || 'middle_center';
-  const align = slide.text_align || 'center'; // left, center, right
+  const align = slide.text_align || 'center'; 
   const width = slide.text_width || 'medium';
   const hasShadow = slide.text_shadow || false;
 
-  // Container Style
   const isDarkMode = themeMode === 'dark';
   const baseBg = isDarkMode ? '15, 23, 42' : '255, 255, 255'; 
   
@@ -83,7 +80,6 @@ export const SlideCanvas = ({ slide, id }) => {
     border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
   } : {};
 
-  // Position Style
   const posStyle = positionMap[position] || positionMap.middle_center;
 
   const renderContent = () => {
@@ -108,7 +104,8 @@ export const SlideCanvas = ({ slide, id }) => {
     if (type === 'hero') {
         return (
             <div className="absolute z-10 flex flex-col gap-8" style={{...posStyle}}>
-                <div className={cn("p-12 rounded-3xl backdrop-blur-sm transition-all", widthClasses[width], `text-${align}`)} style={containerStyle}>
+                {/* REMOVED HARDCODED backdrop-blur-sm */}
+                <div className={cn("p-12 rounded-3xl transition-all", widthClasses[width], `text-${align}`)} style={containerStyle}>
                     <div className={cn("text-9xl uppercase tracking-tighter leading-[0.85] whitespace-pre-wrap mb-8", font, effect)} style={{color: headlineColor}} data-text={slide.title}>
                         {slide.title}
                     </div>
@@ -122,11 +119,8 @@ export const SlideCanvas = ({ slide, id }) => {
         );
     }
 
-    // --- BODY SLIDES ---
     return (
       <div className="absolute z-10 flex flex-col gap-6" style={{...posStyle}}>
-        
-        {/* Headline (Outside Container, but follows width/align) */}
         <div className={cn(
             "uppercase tracking-tighter leading-[0.9] drop-shadow-2xl whitespace-pre-wrap z-20",
             font, effect, "text-8xl",
@@ -136,7 +130,6 @@ export const SlideCanvas = ({ slide, id }) => {
           {slide.title}
         </div>
 
-        {/* Body Text (Inside Container) */}
         <div className={cn(
             "relative whitespace-pre-wrap p-10 rounded-2xl z-10", 
             widthClasses[width],

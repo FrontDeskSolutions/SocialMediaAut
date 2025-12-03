@@ -11,7 +11,7 @@ import logging
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# ... read routes ...
+# ... existing read routes ...
 @router.get("/", response_model=List[Generation])
 async def list_generations():
     docs = await db.generations.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
@@ -42,7 +42,6 @@ async def generate_slide_image(id: str, slide_id: str):
         {"id": id, "slides.id": slide_id}, 
         {"$set": {
             "slides.$.background_url": url,
-            # Reset defaults for safety
             "slides.$.text_position": "middle_center", 
             "slides.$.container_opacity": 0.6
         }}
@@ -85,8 +84,8 @@ async def process_viral_visuals(generation_id: str):
             for i in range(1, len(slides)):
                 slides[i]['background_url'] = clean_url
                 if clean_url and design_rec:
-                    slides[i]['headline_color'] = design_rec.get('primaryColor')
-                    slides[i]['font_color'] = design_rec.get('bodyColor')
+                    slides[i]['headline_color'] = design_rec.get('headline_color') # UPDATED
+                    slides[i]['font_color'] = design_rec.get('font_color') # UPDATED
                     slides[i]['font'] = design_rec.get('font', 'modern')
                     slides[i]['text_position'] = design_rec.get('text_position', 'middle_center')
                     slides[i]['text_align'] = design_rec.get('text_align', 'center')

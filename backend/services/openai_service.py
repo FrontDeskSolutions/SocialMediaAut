@@ -19,7 +19,6 @@ class OpenAIService:
     async def generate_viral_structure(self, topic: str, count: int = 5, business_name: str = None, business_type: str = None) -> dict:
         """Generates content specifically for the 'AI Viral' mode"""
         
-        # Incorporate Business Context
         biz_context = ""
         if business_name:
             biz_context += f"\nBrand Name: {business_name}"
@@ -27,7 +26,10 @@ class OpenAIService:
             biz_context += f"\nBusiness Type: {business_type}"
             
         system_prompt = f"""You are a viral social media expert. 
-        Generate content for a {count}-slide carousel about '{topic}'.
+        Generate content for a {count}-slide carousel about '{topic}'. 
+        
+        The body paragraphs must be narrative based, with the second to last slide being a conclusion/engagement/comment bait. 
+        The last slide is a CTA.
         
         Context: {biz_context}
         
@@ -37,12 +39,12 @@ class OpenAIService:
             'bottomheadline': 'Intriguing subhook'
         }}
         2. 'slides': Array of {count-1} objects.
-           - The first {count-2} slides are BODY slides (Education/Value).
+           - The first {count-2} slides are BODY slides (Narrative/Value).
            - The FINAL slide must be a CTA (Call to Action) specifically for {business_name or 'the brand'}.
            
            Each object must have:
             - 'title': Headline
-            - 'content': Body text (max 40 words)
+            - 'content': Body text (max 300 characters). For the CTA slide, the 'content' must be 10 words or less, relevant to the narrative, and entertaining.
             - 'type': 'body' or 'cta'
         """
         
@@ -66,8 +68,8 @@ class OpenAIService:
         
         Return JSON with these EXACT keys and value options:
         {
-            "primaryColor": "Hex code for Headline (high contrast)",
-            "bodyColor": "Hex code for Body text",
+            "headline_color": "Hex code for Headline (High contrast against background, often vibrant)",
+            "font_color": "Hex code for Body text (Readable)",
             "text_position": "One of: top_left, top_center, top_right, middle_left, middle_center, middle_right, bottom_left, bottom_center, bottom_right",
             "text_align": "left, center, or right",
             "containerOpacity": Float 0.0 to 1.0,
@@ -96,8 +98,8 @@ class OpenAIService:
         except Exception as e:
             logger.error(f"Vision Analysis Error: {e}")
             return {
-                "primaryColor": "#FACC15", 
-                "bodyColor": "#FFFFFF",
+                "headline_color": "#FACC15", 
+                "font_color": "#FFFFFF",
                 "text_position": "middle_center",
                 "text_align": "center",
                 "containerOpacity": 0.6,
@@ -106,7 +108,7 @@ class OpenAIService:
             }
 
     async def generate_slides_content(self, topic: str, count: int = 5, context: str = "") -> list[dict]:
-        # Standard flow (legacy)
+        # Legacy flow...
         system_prompt = f"""You are a social media expert. Generate a {count}-slide carousel. 
         Return ONLY a JSON object with a 'slides' key containing an array of {count} objects.
         """
